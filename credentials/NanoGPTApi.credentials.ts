@@ -6,7 +6,7 @@ import {
 } from 'n8n-workflow';
 
 export class NanoGPTApi implements ICredentialType {
-	name = 'nanoGPT';
+	name = 'nanoGPTApi';
 	displayName = 'NanoGPT API';
 	icon = 'file:nano-gpt.svg' as const;
 	documentationUrl = 'https://docs.nano-gpt.com/introduction';
