@@ -2,7 +2,7 @@
 
 import type { IExecuteFunctions, IDataObject } from 'n8n-workflow';
 import { NanoGPTClient } from '../../../utils/NanoGPTClient';
-import type { NanoGPTMessage } from '../NanoGpt.node';
+import type { NanoGptMessage } from '../NanoGpt.node';
 
 export interface DispatchParams {
 	executeFunctions: IExecuteFunctions;
@@ -87,7 +87,7 @@ async function handleChatCompletion(
 	client: NanoGPTClient,
 	i: number,
 ): Promise<IDataObject> {
-	const messagesRaw = context.getNodeParameter('messages', i) as string | NanoGPTMessage[];
+	const messagesRaw = context.getNodeParameter('messages', i) as string | NanoGptMessage[];
 	const model = context.getNodeParameter('model', i) as string;
 	const advancedOptions = context.getNodeParameter('chatAdvancedOptions', i, {}) as IDataObject;
 

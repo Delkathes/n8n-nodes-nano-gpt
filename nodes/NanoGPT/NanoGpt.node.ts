@@ -33,12 +33,12 @@ import {
 } from './descriptions/parameter-properties-balance';
 import { dispatchNanoGPTOperation } from './handlers/operation-dispatcher';
 
-export interface NanoGPTMessage {
+export interface NanoGptMessage {
 	role: 'system' | 'user' | 'assistant';
 	content: string;
 }
 
-export class NanoGPT implements INodeType {
+export class NanoGpt implements INodeType {
 	description: INodeTypeDescription = {
 		displayName: 'NanoGPT',
 		name: 'nanoGpt',
@@ -55,7 +55,7 @@ export class NanoGPT implements INodeType {
 		usableAsTool: true,
 		credentials: [
 			{
-				name: 'nanoGPTApi',
+				name: 'nanoGPT',
 				required: true,
 			},
 		],
@@ -177,7 +177,7 @@ export class NanoGPT implements INodeType {
 	methods = {
 		loadOptions: {
 			async getTextModels(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
-				const credentials = await this.getCredentials('nanoGPTApi');
+				const credentials = await this.getCredentials('nanoGPT');
 				const baseUrl = credentials.baseUrl === 'custom' ? credentials.customBaseUrl : credentials.baseUrl;
 				try {
 					const response = await this.helpers.httpRequest({
@@ -204,7 +204,7 @@ export class NanoGPT implements INodeType {
 			},
 
 			async getImageModels(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
-				const credentials = await this.getCredentials('nanoGPTApi');
+				const credentials = await this.getCredentials('nanoGPT');
 				const baseUrl = credentials.baseUrl === 'custom' ? credentials.customBaseUrl : credentials.baseUrl;
 				try {
 					const response = await this.helpers.httpRequest({
@@ -244,7 +244,7 @@ export class NanoGPT implements INodeType {
 			},
 
 			async getVideoModels(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
-				const credentials = await this.getCredentials('nanoGPTApi');
+				const credentials = await this.getCredentials('nanoGPT');
 				const baseUrl = credentials.baseUrl === 'custom' ? credentials.customBaseUrl : credentials.baseUrl;
 				try {
 					const response = await this.helpers.httpRequest({
@@ -299,7 +299,7 @@ export class NanoGPT implements INodeType {
 			},
 
 			async getEmbeddingModels(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
-				const credentials = await this.getCredentials('nanoGPTApi');
+				const credentials = await this.getCredentials('nanoGPT');
 				const baseUrl = credentials.baseUrl === 'custom' ? credentials.customBaseUrl : credentials.baseUrl;
 				try {
 					const response = await this.helpers.httpRequest({
