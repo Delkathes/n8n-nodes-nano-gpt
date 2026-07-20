@@ -888,6 +888,16 @@ export class NanoGPTClient {
 		return this.makeRequest('GET', '/paid/v1/models', undefined, {}, queryParams);
 	}
 
+	/**
+	 * List video models with supported parameters
+	 * GET /v1/video-models
+	 */
+	async listVideoModels(detailed: boolean = true): Promise<any> {
+		const queryParams: Record<string, string> = {};
+		if (detailed) queryParams.detailed = 'true';
+		return this.makeRequest('GET', '/v1/video-models', undefined, {}, queryParams);
+	}
+
 	// ============================================
 	// Context Memory Methods
 	// ============================================

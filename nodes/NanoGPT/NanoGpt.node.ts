@@ -330,6 +330,76 @@ export class NanoGpt implements INodeType {
 					];
 				}
 			},
+
+			async getVideoDurations(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
+				const model = this.getNodeParameter('videoModel') as string;
+				if (!model) return [{ name: '5 Seconds', value: '5' }];
+				try {
+					const credentials = await this.getCredentials('nanoGPTApi');
+					const baseUrl = credentials.baseUrl === 'custom' ? credentials.customBaseUrl : credentials.baseUrl;
+					const response = await this.helpers.httpRequest({
+						method: 'GET',
+						url: `${baseUrl}/api/v1/video-models?detailed=true`,
+						headers: {
+							Authorization: `Bearer ${credentials.apiKey}`,
+							'x-api-key': credentials.apiKey as string,
+						},
+						json: true,
+					});
+					const modelData = response.data?.find((m: { id: string }) => m.id === model);
+					const opts = modelData?.supported_parameters?.parameters?.duration?.options;
+					if (opts) return opts.map((o: { value: string; label: string }) => ({ name: o.label, value: o.value }));
+				} catch {}
+				return [{ name: '5 Seconds', value: '5' }, { name: '10 Seconds', value: '10' }];
+			},
+
+			async getVideoResolutions(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
+				const model = this.getNodeParameter('videoModel') as string;
+				if (!model) return [{ name: '720p', value: '720p' }];
+				try {
+					const credentials = await this.getCredentials('nanoGPTApi');
+					const baseUrl = credentials.baseUrl === 'custom' ? credentials.customBaseUrl : credentials.baseUrl;
+					const response = await this.helpers.httpRequest({
+						method: 'GET',
+						url: `${baseUrl}/api/v1/video-models?detailed=true`,
+						headers: {
+							Authorization: `Bearer ${credentials.apiKey}`,
+							'x-api-key': credentials.apiKey as string,
+						},
+						json: true,
+					});
+					const modelData = response.data?.find((m: { id: string }) => m.id === model);
+					const opts = modelData?.supported_parameters?.parameters?.resolution?.options;
+					if (opts) return opts.map((o: { value: string; label: string }) => ({ name: o.label, value: o.value }));
+				} catch {}
+				return [{ name: '720p', value: '720p' }, { name: '1080p', value: '1080p' }];
+			},
+
+			async getVideoAspectRatios(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
+				const model = this.getNodeParameter('videoModel') as string;
+				if (!model) return [{ name: '16:9', value: '16:9' }];
+				try {
+					const credentials = await this.getCredentials('nanoGPTApi');
+					const baseUrl = credentials.baseUrl === 'custom' ? credentials.customBaseUrl : credentials.baseUrl;
+					const response = await this.helpers.httpRequest({
+						method: 'GET',
+						url: `${baseUrl}/api/v1/video-models?detailed=true`,
+						headers: {
+							Authorization: `Bearer ${credentials.apiKey}`,
+							'x-api-key': credentials.apiKey as string,
+						},
+						json: true,
+					});
+					const modelData = response.data?.find((m: { id: string }) => m.id === model);
+					const opts = modelData?.supported_parameters?.parameters?.aspect_ratio?.options;
+					if (opts) return opts.map((o: { value: string; label: string }) => ({ name: o.label, value: o.value }));
+				} catch {}
+				return [
+					{ name: '16:9', value: '16:9' },
+					{ name: '9:16', value: '9:16' },
+					{ name: '1:1', value: '1:1' },
+				];
+			},
 		},
 	};
 
