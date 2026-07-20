@@ -1,0 +1,23 @@
+{
+  "plugins": {
+    "@release-it/conventional-changelog": {
+      "preset": "angular"
+    },
+    "@release-it-plugins/lerna-changelog": {
+      "infile": "CHANGELOG.md",
+      "launchEditor": false
+    }
+  },
+  "npm": {
+    "publish": false
+  },
+  "github": {
+    "release": true
+  },
+  "git": {
+    "commitMessage": "release v{{version}}"
+  },
+  "hooks": {
+    "after:bump": "npx n8n-node lint --fix && npx n8n-node build"
+  }
+}

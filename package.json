@@ -1,0 +1,67 @@
+{
+	"name": "n8n-nodes-nano-gpt",
+	"version": "0.1.0",
+	"description": "nano-gpt community node package to execute NanoGPT API calls.",
+	"license": "MIT",
+	"homepage": "https://github.com/Delkathes/n8n-nodes-nano-gpt",
+	"keywords": [
+		"n8n-community-node-package",
+		"n8n",
+		"nano",
+		"nanocurrency",
+		"nano-gpt",
+		"cryptocurrency",
+		"payments",
+		"ai",
+		"llm"
+	],
+	"author": {
+		"name": "Delkathes",
+		"email": "iamt.lessd@gmail.com"
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/Delkathes/n8n-nodes-nano-gpt.git"
+	},
+	"scripts": {
+		"build": "n8n-node build",
+		"build:watch": "tsc --watch",
+		"dev": "n8n-node dev",
+		"lint": "n8n-node lint",
+		"lint:fix": "n8n-node lint --fix",
+		"release": "n8n-node release",
+		"prepublishOnly": "n8n-node prerelease"
+	},
+	"files": [
+		"dist"
+	],
+	"n8n": {
+		"n8nNodesApiVersion": 1,
+		"strict": true,
+		"credentials": [
+			"dist/credentials/NanoGPTApi.credentials.js"
+		],
+		"nodes": [
+			"dist/nodes/NanoGPT/NanoGpt.node.js"
+		]
+	},
+	"devDependencies": {
+		"@n8n/node-cli": "0.39.3",
+		"@release-it-plugins/lerna-changelog": "^8.0.1",
+		"@release-it/conventional-changelog": "^11.0.0",
+		"eslint": "9.39.5",
+		"prettier": "3.9.5",
+		"release-it": "19.2.4",
+		"typescript": "5.9.3"
+	},
+	"peerDependencies": {
+		"n8n-workflow": "*"
+	},
+	"pnpm": {
+		"onlyBuiltDependencies": [
+			"eslint-plugin-n8n-nodes-base",
+			"isolated-vm",
+			"unrs-resolver"
+		]
+	}
+}
