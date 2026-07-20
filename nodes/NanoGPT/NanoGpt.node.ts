@@ -60,9 +60,9 @@ export class NanoGpt implements INodeType {
 			},
 		],
 		codex: {
-			categories: ['AI', 'Development'],
+			categories: ['Development'],
 			subcategories: {
-				AI: ['Language Models', 'Image Generation', 'Speech & Audio'],
+				Development: ['Language Models', 'Image Generation', 'Speech & Audio'],
 			},
 			resources: {
 				primaryDocumentation: [
