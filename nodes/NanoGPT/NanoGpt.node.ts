@@ -43,7 +43,7 @@ export class NanoGpt implements INodeType {
 		displayName: 'NanoGPT',
 		name: 'nanoGpt',
 		icon: 'file:nano-gpt.svg',
-		group: ['output'],
+		group: ['transform'],
 		version: 1,
 		subtitle: '={{$parameter["operation"]}}',
 		description: 'NanoGPT AI API for text, image, video, and audio generation',
