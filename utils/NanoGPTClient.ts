@@ -711,35 +711,27 @@ export class NanoGPTClient {
 
 	/**
 	 * Synchronous TTS (returns audio directly)
-	 * POST /v1/speech
+	 * POST /v1/audio/speech
 	 */
 	async synchronousTTS(
 		input: string,
 		model: string,
 		voice: string,
 		options: {
-			format?: string;
-			sampleRate?: number;
+			responseFormat?: string;
 			speed?: number;
-			language?: string;
-			pitch?: number;
-			emotion?: string;
-			stability?: number;
-			similarity?: number;
+			instructions?: string;
+			stream?: boolean;
 		} = {},
 	): Promise<SynchronousTTSResponse> {
 		const requestBody: Record<string, any> = { model, input, voice };
 
-		if (options.format) requestBody.format = options.format;
-		if (options.sampleRate) requestBody.sample_rate = options.sampleRate;
 		if (options.speed !== undefined) requestBody.speed = options.speed;
-		if (options.language) requestBody.language = options.language;
-		if (options.pitch !== undefined) requestBody.pitch = options.pitch;
-		if (options.emotion) requestBody.emotion = options.emotion;
-		if (options.stability !== undefined) requestBody.stability = options.stability;
-		if (options.similarity !== undefined) requestBody.similarity = options.similarity;
+		if (options.responseFormat) requestBody.response_format = options.responseFormat;
+		if (options.instructions) requestBody.instructions = options.instructions;
+		if (options.stream !== undefined) requestBody.stream = options.stream;
 
-		return this.makeRequest('POST', '/v1/speech', requestBody);
+		return this.makeRequest('POST', '/v1/audio/speech', requestBody);
 	}
 
 	/**

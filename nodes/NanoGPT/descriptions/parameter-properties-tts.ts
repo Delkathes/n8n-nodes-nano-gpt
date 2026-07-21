@@ -66,17 +66,20 @@ export const ttsNanoGPTParameterProperties: INodeProperties[] = [
 	},
 
 	{
-		displayName: 'Voice',
+		displayName: 'Voice Name or ID',
 		name: 'voice',
-		type: 'string',
+		type: 'options',
+		typeOptions: {
+			loadOptionsMethod: 'getTTSVoices',
+			loadOptionsDependsOn: ['ttsModel'],
+		},
 		displayOptions: {
 			show: {
 				operation: ['generateSpeech', 'synchronousTTS'],
 			},
 		},
 		default: 'alloy',
-		placeholder: 'alloy, nova, shimmer, ...',
-		description: 'Voice ID (varies by model). OpenAI: alloy, ash, ballad, coral, echo, fable, nova, onyx, sage, shimmer. Kokoro: bf_emma, bm_george, etc. Elevenlabs: custom voice IDs.',
+		description: 'Voice ID (varies by model). Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
 	},
 
 	{
@@ -108,12 +111,10 @@ export const ttsNanoGPTParameterProperties: INodeProperties[] = [
 					{ name: 'WAV', value: 'wav' },
 					{ name: 'OPUS', value: 'opus' },
 					{ name: 'FLAC', value: 'flac' },
-					{ name: 'PCM16', value: 'pcm16' },
 					{ name: 'AAC', value: 'aac' },
-					{ name: 'OGG', value: 'ogg' },
 				],
 				default: 'mp3',
-				description: 'Audio output format',
+				description: 'Audio output format (OpenAI models only)',
 			},
 			{
 				displayName: 'Instructions',
@@ -125,12 +126,29 @@ export const ttsNanoGPTParameterProperties: INodeProperties[] = [
 				description: 'Voice style instructions (OpenAI models only)',
 			},
 			{
+				displayName: 'Enable Streaming',
+				name: 'stream',
+				type: 'boolean',
+				default: false,
+				description: 'Whether to return chunked audio bytes progressively (sync mode, OpenAI/Elevenlabs TTS only)',
+				displayOptions: {
+					show: {
+						'/operation': ['synchronousTTS'],
+					},
+				},
+			},
+			{
 				displayName: 'Stability (Elevenlabs)',
 				name: 'stability',
 				type: 'number',
 				typeOptions: { minValue: 0, maxValue: 1, numberPrecision: 2 },
 				default: 0.5,
-				description: 'Voice stability - higher = more consistent (Elevenlabs only)',
+				description: 'Voice stability — higher = more consistent (Elevenlabs async only)',
+				displayOptions: {
+					show: {
+						'/operation': ['generateSpeech'],
+					},
+				},
 			},
 			{
 				displayName: 'Similarity Boost (Elevenlabs)',
@@ -138,7 +156,12 @@ export const ttsNanoGPTParameterProperties: INodeProperties[] = [
 				type: 'number',
 				typeOptions: { minValue: 0, maxValue: 1, numberPrecision: 2 },
 				default: 0.75,
-				description: 'Voice similarity boost (Elevenlabs only)',
+				description: 'Voice similarity boost (Elevenlabs async only)',
+				displayOptions: {
+					show: {
+						'/operation': ['generateSpeech'],
+					},
+				},
 			},
 			{
 				displayName: 'Style (Elevenlabs)',
@@ -146,7 +169,12 @@ export const ttsNanoGPTParameterProperties: INodeProperties[] = [
 				type: 'number',
 				typeOptions: { minValue: 0, maxValue: 1, numberPrecision: 2 },
 				default: 0,
-				description: 'Style exaggeration (Elevenlabs only)',
+				description: 'Style exaggeration (Elevenlabs async only)',
+				displayOptions: {
+					show: {
+						'/operation': ['generateSpeech'],
+					},
+				},
 			},
 		],
 	},

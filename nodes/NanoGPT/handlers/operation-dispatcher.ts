@@ -480,9 +480,9 @@ async function handleGenerateSpeech(
 		speed: advancedOptions.speed as number,
 		responseFormat: advancedOptions.response_format as string,
 		instructions: advancedOptions.instructions as string,
-		stability: advancedOptions.stability as number,
-		similarityBoost: advancedOptions.similarity_boost as number,
-		style: advancedOptions.style as number,
+		stability: advancedOptions.stability !== undefined ? (advancedOptions.stability as number) : undefined,
+		similarityBoost: advancedOptions.similarity_boost !== undefined ? (advancedOptions.similarity_boost as number) : undefined,
+		style: advancedOptions.style !== undefined ? (advancedOptions.style as number) : undefined,
 	});
 
 	return response as unknown as IDataObject;
@@ -504,7 +504,9 @@ async function handleSynchronousTTS(
 
 	const response = await client.synchronousTTS(text, model, voice, {
 		speed: advancedOptions.speed as number,
-		format: advancedOptions.response_format as string,
+		responseFormat: advancedOptions.response_format as string,
+		instructions: advancedOptions.instructions as string,
+		stream: advancedOptions.stream as boolean,
 	});
 
 	return response as unknown as IDataObject;
