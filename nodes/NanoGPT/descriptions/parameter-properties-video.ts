@@ -14,12 +14,6 @@ export const videoNanoGPTParameterProperties: INodeProperties[] = [
 		},
 		options: [
 			{
-				name: 'Generate Video',
-				value: 'generateVideo',
-				description: 'Generate videos from text prompts',
-				action: 'Generate video',
-			},
-			{
 				name: 'Check Video Status',
 				value: 'checkVideoStatus',
 				description: 'Check video generation status',
@@ -217,7 +211,6 @@ export const videoNanoGPTParameterProperties: INodeProperties[] = [
 			show: {
 				operation: [
 					'checkVideoStatus',
-					'unifiedVideoStatus',
 				],
 			},
 		},

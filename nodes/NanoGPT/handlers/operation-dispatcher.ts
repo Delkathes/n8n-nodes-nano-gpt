@@ -33,7 +33,6 @@ export async function dispatchNanoGPTOperation(params: DispatchParams): Promise<
 		case 'generateVideo':
 			return handleGenerateVideo(executeFunctions, client, i);
 		case 'checkVideoStatus':
-		case 'unifiedVideoStatus':
 		case 'extendVideo':
 		case 'getVideoContent':
 		case 'recoverVideo':
@@ -382,7 +381,6 @@ async function handleVideoOperations(
 	let response;
 	switch (operation) {
 		case 'checkVideoStatus':
-		case 'unifiedVideoStatus':
 			response = await client.getVideoStatus(videoId);
 			break;
 		case 'extendVideo': {
