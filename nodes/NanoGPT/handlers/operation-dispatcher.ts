@@ -385,15 +385,22 @@ async function handleVideoOperations(
 		case 'unifiedVideoStatus':
 			response = await client.getVideoStatus(videoId);
 			break;
-		case 'extendVideo':
-			response = await client.extendVideo(videoId, 0);
+		case 'extendVideo': {
+			const index = context.getNodeParameter('extendVideoIndex', i, 0) as number;
+			response = await client.extendVideo(videoId, index);
 			break;
-		case 'getVideoContent':
-			response = await client.getVideoContent(videoId, 'sora-2');
+		}
+		case 'getVideoContent': {
+			const variant = context.getNodeParameter('videoContentVariant', i, 'video') as string;
+			response = await client.getVideoContent(videoId, 'sora-2', variant);
 			break;
-		case 'recoverVideo':
-			response = await client.recoverVideos({ model: videoId });
+		}
+		case 'recoverVideo': {
+			const limit = context.getNodeParameter('recoverVideoLimit', i, 10) as number;
+			const model = videoId || undefined;
+			response = await client.recoverVideos({ model, limit });
 			break;
+		}
 	}
 
 	return response as unknown as IDataObject;

@@ -210,22 +210,143 @@ export const videoNanoGPTParameterProperties: INodeProperties[] = [
 	},
 
 	{
-		displayName: 'Video ID',
+		displayName: 'Video ID / Request ID',
 		name: 'videoId',
 		type: 'string',
 		displayOptions: {
 			show: {
 				operation: [
 					'checkVideoStatus',
-					'extendVideo',
-					'getVideoContent',
 					'unifiedVideoStatus',
-					'recoverVideo',
 				],
 			},
 		},
 		default: '',
 		placeholder: 'video_abc123',
-		description: 'Video ID to check, extend, or recover',
+		description: 'Video or request ID to check status',
+	},
+
+	{
+		displayName:
+			'Get Video Content only works with Sora 2 (<code>sora-2</code>). Use the "Generate Video" node with Sora 2 first to obtain a run ID.',
+		name: 'videoContentNotice',
+		type: 'notice',
+		default: '',
+		displayOptions: {
+			show: {
+				operation: ['getVideoContent'],
+			},
+		},
+	},
+
+	{
+		displayName: 'Sora 2 Run ID',
+		name: 'videoId',
+		type: 'string',
+		displayOptions: {
+			show: {
+				operation: ['getVideoContent'],
+			},
+		},
+		default: '',
+		placeholder: 'vid_abc123',
+		description: 'Run ID from a Sora 2 video generation request',
+		required: true,
+	},
+
+	{
+		displayName: 'Variant',
+		name: 'videoContentVariant',
+		type: 'options',
+		displayOptions: {
+			show: {
+				operation: ['getVideoContent'],
+			},
+		},
+		options: [
+			{ name: 'Video', value: 'video' },
+			{ name: 'Thumbnail', value: 'thumbnail' },
+			{ name: 'Spritesheet', value: 'spritesheet' },
+		],
+		default: 'video',
+		description: 'Type of content to retrieve',
+	},
+
+	{
+		displayName:
+			'Task-based Extend Video is only for Midjourney videos. For all other extend models (Wan, Veo, Seedance), use the Generate Video node directly with an extend model.',
+		name: 'extendVideoNotice',
+		type: 'notice',
+		default: '',
+		displayOptions: {
+			show: {
+				operation: ['extendVideo'],
+			},
+		},
+	},
+
+	{
+		displayName: 'Midjourney Task ID',
+		name: 'videoId',
+		type: 'string',
+		displayOptions: {
+			show: {
+				operation: ['extendVideo'],
+			},
+		},
+		default: '',
+		placeholder: 'vid_m1abc123def456',
+		description: 'Run ID or Task ID from the original Midjourney video request',
+		required: true,
+	},
+
+	{
+		displayName: 'Video Index',
+		name: 'extendVideoIndex',
+		type: 'options',
+		displayOptions: {
+			show: {
+				operation: ['extendVideo'],
+			},
+		},
+		options: [
+			{ name: 'Video 1 (index 0)', value: 0 },
+			{ name: 'Video 2 (index 1)', value: 1 },
+			{ name: 'Video 3 (index 2)', value: 2 },
+			{ name: 'Video 4 (index 3)', value: 3 },
+		],
+		default: 0,
+		description: 'Which of the 4 Midjourney videos to extend (0-3)',
+	},
+
+	{
+		displayName: 'Model (Optional)',
+		name: 'videoId',
+		type: 'string',
+		displayOptions: {
+			show: {
+				operation: ['recoverVideo'],
+			},
+		},
+		default: '',
+		placeholder: 'sora-2',
+		description: 'Filter recovered runs by model, or leave empty for all',
+	},
+
+	{
+		displayName: 'Max Results',
+		name: 'recoverVideoLimit',
+		type: 'number',
+		displayOptions: {
+			show: {
+				operation: ['recoverVideo'],
+			},
+		},
+		default: 10,
+		description: 'Maximum number of runs to recover (1-50, default 10)',
+		typeOptions: {
+			minValue: 1,
+			maxValue: 50,
+		},
 	},
 ];
