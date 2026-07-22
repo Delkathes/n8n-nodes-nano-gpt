@@ -119,6 +119,14 @@ export const sttNanoGPTParameterProperties: INodeProperties[] = [
 				default: 0,
 				description: 'Actual audio duration for accurate billing',
 			},
+			{
+				displayName: 'Audio Content Type',
+				name: 'audioContentType',
+				type: 'string',
+				default: '',
+				placeholder: 'audio/mpeg',
+				description: 'MIME type of the audio (e.g. audio/wav, audio/mpeg). Use {{ $json.contentType }} from TTS nodes for automatic detection.',
+			},
 		],
 	},
 

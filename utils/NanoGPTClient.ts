@@ -622,9 +622,10 @@ export class NanoGPTClient {
 			diarize?: boolean;
 			tagAudioEvents?: boolean;
 			actualDuration?: number;
+			contentType?: string;
 		} = {},
 	): Promise<TranscribeResponse> {
-		const { audioUrl, model = 'Whisper-Large-V3', language = 'auto', diarize = false, tagAudioEvents = false, actualDuration } =
+		const { audioUrl, model = 'Whisper-Large-V3', language = 'auto', diarize = false, tagAudioEvents = false, actualDuration, contentType } =
 			options;
 
 		const isUrl = audioUrl && (audioUrl.startsWith('http://') || audioUrl.startsWith('https://'));
@@ -636,14 +637,16 @@ export class NanoGPTClient {
 		}
 
 		const audioBuffer = Buffer.from(audioUrl || '', 'base64');
-		const fileName = `audio-${Date.now()}.${model?.includes('tts') || model?.includes('gpt') ? 'mp3' : 'wav'}`;
+		const ct = contentType || 'audio/mpeg';
+		const ext = ct.split('/')[1] || 'mp3';
+		const fileName = `audio-${Date.now()}.${ext}`;
 
 		const formData: any = {
 			audio: {
 				value: audioBuffer,
 				options: {
 					filename: fileName,
-					contentType: 'audio/mpeg',
+					contentType: ct,
 				},
 			},
 			model,
