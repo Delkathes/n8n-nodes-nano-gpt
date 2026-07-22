@@ -35,6 +35,7 @@ import { usageNanoGPTParameterProperties } from './descriptions/parameter-proper
 import { messagesNanoGPTParameterProperties } from './descriptions/parameter-properties-messages';
 import { aiDetectionNanoGPTParameterProperties } from './descriptions/parameter-properties-ai-detection';
 import { moderationNanoGPTParameterProperties } from './descriptions/parameter-properties-moderation';
+import { dataExtractionNanoGPTParameterProperties } from './descriptions/parameter-properties-data-extraction';
 import { dispatchNanoGPTOperation } from './handlers/operation-dispatcher';
 
 export interface NanoGptMessage {
@@ -102,6 +103,11 @@ export class NanoGpt implements INodeType {
 						name: 'Context Memory',
 						value: 'contextMemory',
 						description: 'Context memory APIs',
+					},
+					{
+						name: 'Data Extraction',
+						value: 'dataExtraction',
+						description: 'Web, social, and maps data extraction',
 					},
 					{
 						name: 'Embedding',
@@ -199,6 +205,7 @@ export class NanoGpt implements INodeType {
 			...usageNanoGPTParameterProperties,
 			...aiDetectionNanoGPTParameterProperties,
 			...moderationNanoGPTParameterProperties,
+			...dataExtractionNanoGPTParameterProperties,
 		],
 	};
 

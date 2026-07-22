@@ -39,6 +39,7 @@ import type {
 	AIDetectionResponse,
 	ModerationResponse,
 	ModerationModelsResponse,
+	DataExtractionResponse,
 } from '../types/nanogpt';
 
 export class NanoGPTClient {
@@ -1223,5 +1224,44 @@ export class NanoGPTClient {
 		const queryParams: Record<string, string> = {};
 		if (options.detailed !== undefined) queryParams.detailed = String(options.detailed);
 		return this.makeRequest('GET', '/v1/moderation-models', undefined, {}, queryParams);
+	}
+
+	// ============================================
+	// Data Extraction Methods
+	// ============================================
+
+	/**
+	 * Run a data extraction operation
+	 * POST /v1/{endpoint}
+	 */
+	async dataExtraction(
+		endpoint: string,
+		body: Record<string, any>,
+	): Promise<DataExtractionResponse> {
+		const url = `${this.getBaseUrl()}/api/${endpoint}`;
+
+		try {
+			const response = await this.context.helpers.httpRequest({
+				method: 'POST',
+				url,
+				headers: {
+					...this.getAuthHeaders(`/${endpoint}`),
+					'Content-Type': 'application/json',
+				},
+				body,
+				returnFullResponse: true,
+			} as any);
+			return typeof response.body === 'string' ? JSON.parse(response.body) : response.body;
+		} catch (error: unknown) {
+			if (error && typeof error === 'object' && 'response' in error) {
+				const err = error as any;
+				const data = err.response?.data;
+				if (data?.error?.message) {
+					throw new NodeOperationError(this.context.getNode(), `NanoGPT API Error (${err.response.status}): ${data.error.message}`);
+				}
+			}
+			const message = error instanceof Error ? error.message : String(error);
+			throw new NodeOperationError(this.context.getNode(), `NanoGPT API request failed: ${message}`);
+		}
 	}
 }

@@ -86,6 +86,18 @@ export async function dispatchNanoGPTOperation(params: DispatchParams): Promise<
 			return handleModerate(executeFunctions, client, i);
 		case 'listModerationModels':
 			return handleListModerationModels(executeFunctions, client, i);
+		case 'firecrawl':
+		case 'googleMaps':
+		case 'googleMapsReviews':
+		case 'facebookAds':
+		case 'instagramProfile':
+		case 'instagramPosts':
+		case 'instagramReels':
+		case 'reddit':
+		case 'tiktok':
+		case 'linkedinProfile':
+		case 'hunter':
+			return handleDataExtraction(executeFunctions, client, i, operation);
 		default:
 			throw new Error(`Unknown operation: ${operation}`);
 	}
@@ -835,5 +847,235 @@ async function handleListModerationModels(
 	const detailed = context.getNodeParameter('detailed', i, true) as boolean;
 
 	const response = await client.listModerationModels({ detailed });
+	return response as unknown as IDataObject;
+}
+
+async function handleDataExtraction(
+	context: IExecuteFunctions,
+	client: NanoGPTClient,
+	i: number,
+	operation: string,
+): Promise<IDataObject> {
+	const maxTotalChargeUsd = context.getNodeParameter('maxTotalChargeUsd', i, undefined) as number | undefined;
+	const body: Record<string, any> = {};
+
+	if (maxTotalChargeUsd !== undefined && maxTotalChargeUsd > 0) {
+		body.maxTotalChargeUsd = maxTotalChargeUsd;
+	}
+
+	function parseArray(val: string): string[] {
+		return val.split(',').map((s) => s.trim()).filter(Boolean);
+	}
+
+	function normalizeRedditUrl(url: string): string {
+		url = url.replace(/^https?:\/\/www\.reddit\.com\//, 'https://reddit.com/');
+		url = url.replace(/\/$/, '');
+		url = url.replace(/^(https?:\/\/reddit\.com\/r\/\w+\/comments\/\w+).*$/, '$1');
+		return url;
+	}
+
+	function mergeOpts(body: Record<string, any>, opts: IDataObject, arrayFields: string[], remap?: Record<string, string>): void {
+		for (const [key, value] of Object.entries(opts)) {
+			if (value === undefined || value === '' || value === false) continue;
+			const apiKey = (remap && remap[key]) || key;
+			if (arrayFields.includes(key)) {
+				body[apiKey] = parseArray(value as string);
+			} else {
+				body[apiKey] = value;
+			}
+		}
+	}
+
+	let endpoint: string;
+
+	switch (operation) {
+		case 'firecrawl': {
+			endpoint = 'v1/firecrawl';
+			body.url = context.getNodeParameter('firecrawlUrl', i) as string;
+			body.operation = context.getNodeParameter('firecrawlOperation', i, 'scrape') as string;
+			const opts = context.getNodeParameter('firecrawlOptions', i, {}) as IDataObject;
+			mergeOpts(body, opts, ['formats']);
+			break;
+		}
+		case 'googleMaps': {
+			endpoint = 'v1/googlemaps';
+			const searchStrings = context.getNodeParameter('googleMapsSearchStrings', i, '') as string;
+			const startUrls = context.getNodeParameter('googleMapsStartUrls', i, '') as string;
+			const placeIds = context.getNodeParameter('googleMapsPlaceIds', i, '') as string;
+			if (searchStrings) body.searchStringsArray = parseArray(searchStrings);
+			if (startUrls) body.startUrls = parseArray(startUrls);
+			if (placeIds) body.placeIds = parseArray(placeIds);
+			const opts = context.getNodeParameter('googleMapsOptions', i, {}) as IDataObject;
+			mergeOpts(body, opts, [], { googleMapsResultLimit: 'resultLimit', googleMapsMaxReviews: 'maxReviews' });
+			break;
+		}
+		case 'googleMapsReviews': {
+			endpoint = 'v1/googlemaps/reviews';
+			const startUrls = context.getNodeParameter('googleMapsReviewsStartUrls', i, '') as string;
+			const placeIds = context.getNodeParameter('googleMapsReviewsPlaceIds', i, '') as string;
+			if (startUrls) body.startUrls = parseArray(startUrls);
+			if (placeIds) body.placeIds = parseArray(placeIds);
+			const opts = context.getNodeParameter('googleMapsReviewsOptions', i, {}) as IDataObject;
+			if (opts.personalData !== undefined) body.personalData = opts.personalData;
+			mergeOpts(body, opts, [], { googleMapsReviewsResultLimit: 'resultLimit', googleMapsReviewsMaxReviews: 'maxReviews' });
+			break;
+		}
+		case 'facebookAds': {
+			endpoint = 'v1/facebook/ads';
+			body.startUrls = parseArray(context.getNodeParameter('facebookAdsStartUrls', i) as string);
+			const opts = context.getNodeParameter('facebookAdsOptions', i, {}) as IDataObject;
+			mergeOpts(body, opts, [], { facebookAdsResultLimit: 'resultLimit', facebookAdsResultsLimit: 'resultsLimit' });
+			break;
+		}
+		case 'instagramProfile': {
+			endpoint = 'v1/instagram/profile';
+			body.username = parseArray(context.getNodeParameter('instagramProfileUsernames', i) as string);
+			const opts = context.getNodeParameter('instagramProfileOptions', i, {}) as IDataObject;
+			mergeOpts(body, opts, [], { instagramProfileResultLimit: 'resultLimit' });
+			break;
+		}
+		case 'instagramPosts': {
+			endpoint = 'v1/instagram/posts';
+			body.username = parseArray(context.getNodeParameter('instagramPostsUsernames', i) as string);
+			const opts = context.getNodeParameter('instagramPostsOptions', i, {}) as IDataObject;
+			mergeOpts(body, opts, [], { instagramPostsResultLimit: 'resultLimit', instagramPostsResultsLimit: 'resultsLimit' });
+			break;
+		}
+		case 'instagramReels': {
+			endpoint = 'v1/instagram/reels';
+			body.username = parseArray(context.getNodeParameter('instagramReelsUsernames', i) as string);
+			const opts = context.getNodeParameter('instagramReelsOptions', i, {}) as IDataObject;
+			mergeOpts(body, opts, [], { instagramReelsResultLimit: 'resultLimit', instagramReelsResultsLimit: 'resultsLimit' });
+			break;
+		}
+		case 'reddit': {
+			endpoint = 'v1/reddit';
+			const startUrls = context.getNodeParameter('redditStartUrls', i, '') as string;
+			const searches = context.getNodeParameter('redditSearches', i, '') as string;
+			if (startUrls) {
+				body.startUrls = parseArray(startUrls).map((url) => ({ url: normalizeRedditUrl(url) }));
+			}
+			if (searches) body.searches = parseArray(searches);
+			const opts = context.getNodeParameter('redditOptions', i, {}) as IDataObject;
+			if (opts.searchPosts !== undefined) body.searchPosts = opts.searchPosts;
+			if (opts.searchComments !== undefined) body.searchComments = opts.searchComments;
+			if (opts.searchCommunities !== undefined) body.searchCommunities = opts.searchCommunities;
+			if (opts.searchUsers !== undefined) body.searchUsers = opts.searchUsers;
+			if (opts.includeNSFW !== undefined) body.includeNSFW = opts.includeNSFW;
+			mergeOpts(body, opts, [], { redditResultLimit: 'resultLimit' });
+			if (searches && body.searchPosts === undefined) body.searchPosts = true;
+			break;
+		}
+		case 'tiktok': {
+			endpoint = 'v1/tiktok';
+			const hashtags = context.getNodeParameter('tiktokHashtags', i, '') as string;
+			const profiles = context.getNodeParameter('tiktokProfiles', i, '') as string;
+			const searchQueries = context.getNodeParameter('tiktokSearchQueries', i, '') as string;
+			const postURLs = context.getNodeParameter('tiktokPostURLs', i, '') as string;
+			if (hashtags) body.hashtags = parseArray(hashtags);
+			if (profiles) body.profiles = parseArray(profiles);
+			if (searchQueries) body.searchQueries = parseArray(searchQueries);
+			if (postURLs) body.postURLs = parseArray(postURLs);
+			const opts = context.getNodeParameter('tiktokOptions', i, {}) as IDataObject;
+			mergeOpts(body, opts, [], { tiktokResultLimit: 'resultLimit' });
+			break;
+		}
+		case 'linkedinProfile': {
+			endpoint = 'v1/linkedin/profile';
+			body.profileUrls = parseArray(context.getNodeParameter('linkedinProfileUrls', i) as string);
+			break;
+		}
+		case 'hunter': {
+			endpoint = 'v1/hunter';
+			const hunterEndpoint = context.getNodeParameter('hunterEndpoint', i) as string;
+			const hunterOpts = context.getNodeParameter('hunterOptions', i, {}) as IDataObject;
+			const paramsRaw = hunterOpts.params;
+			const extraParams: Record<string, any> = (typeof paramsRaw === 'string' ? JSON.parse(paramsRaw) : paramsRaw) || {};
+			const isPost = hunterEndpoint === 'discover';
+			const qp: Record<string, string> = {};
+			function getStr(name: string) { const v = context.getNodeParameter(name, i, '') as string; return v || ''; }
+			function getNum(name: string) { return context.getNodeParameter(name, i, 0) as number; }
+			function getBool(name: string) { return context.getNodeParameter(name, i, false) as boolean; }
+			function add(key: string, value: string | number | boolean | undefined): void {
+				if (value !== undefined && value !== '' && value !== 0 && value !== false) {
+					qp[key] = String(value);
+				}
+			}
+
+			switch (hunterEndpoint) {
+				case 'domain-search':
+					add('domain', getStr('hunterDomain'));
+					add('company', getStr('hunterCompany'));
+					add('type', getStr('hunterEmailType'));
+					add('department', getStr('hunterDepartment'));
+					add('seniority', getStr('hunterSeniority'));
+					add('limit', getNum('hunterLimit'));
+					add('offset', getNum('hunterOffset'));
+					break;
+				case 'email-finder':
+					add('domain', getStr('hunterFinderDomain'));
+					add('company', getStr('hunterFinderCompany'));
+					add('linkedin', getStr('hunterFinderLinkedin'));
+					add('full_name', getStr('hunterFullName'));
+					add('first_name', getStr('hunterFirstName'));
+					add('last_name', getStr('hunterLastName'));
+					add('max_duration', getNum('hunterMaxDuration'));
+					add('limit', getNum('hunterLimit'));
+					break;
+				case 'email-verifier':
+					add('email', getStr('hunterEmail'));
+					break;
+				case 'email-count':
+					add('domain', getStr('hunterCountDomain'));
+					add('company', getStr('hunterCountCompany'));
+					add('type', getStr('hunterCountEmailType'));
+					add('limit', getNum('hunterLimit'));
+					break;
+				case 'people/find':
+					add('email', getStr('hunterEnrichEmail'));
+					add('linkedin', getStr('hunterFinderLinkedin'));
+					break;
+				case 'companies/find':
+					add('domain', getStr('hunterCompanyEnrichDomain'));
+					add('clearbit', getBool('hunterCompanyClearbit'));
+					break;
+				case 'combined/find':
+					add('email', getStr('hunterCombinedEmail'));
+					add('clearbit', getBool('hunterCompanyClearbit'));
+					break;
+				case 'discover':
+					add('query', getStr('hunterDiscoverQuery'));
+					add('domain', getStr('hunterDiscoverDomain'));
+					add('company', getStr('hunterDiscoverCompany'));
+					add('industries', getStr('hunterDiscoverIndustries'));
+					add('country', getStr('hunterDiscoverCountry'));
+					add('headcount', getStr('hunterDiscoverHeadcount'));
+					add('limit', getNum('hunterLimit'));
+					add('offset', getNum('hunterOffset'));
+					break;
+			}
+
+			for (const [k, v] of Object.entries(extraParams)) {
+				if (v !== undefined && v !== null && v !== '') {
+					qp[k] = String(v);
+				}
+			}
+
+			if (!isPost) {
+				const response = await (client as any).makeRequest('GET', `/v1/hunter/${hunterEndpoint}`, undefined, {}, qp);
+				return response as unknown as IDataObject;
+			} else {
+				body.endpoint = hunterEndpoint;
+				for (const [k, v] of Object.entries(qp)) {
+					body[k] = v;
+				}
+			}
+			break;
+		}
+		default:
+			throw new Error(`Unknown data extraction operation: ${operation}`);
+	}
+
+	const response = await client.dataExtraction(endpoint, body);
 	return response as unknown as IDataObject;
 }

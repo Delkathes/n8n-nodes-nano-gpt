@@ -539,3 +539,19 @@ export interface ModerationModelsResponse {
 		};
 	}>;
 }
+
+// ============================================
+// Data Extraction Types
+// ============================================
+
+export interface DataExtractionResponse {
+	data: any[];
+	meta: {
+		nanogpt: {
+			costUsd: number;
+			itemsReturned?: number;
+			[endpoint: string]: any;
+		};
+		[provider: string]: any;
+	};
+}
