@@ -612,6 +612,7 @@ export class NanoGPTClient {
 	/**
 	 * Transcribe audio file
 	 * POST /transcribe
+	 * Supports URL input (JSON body) and base64 input (multipart/form-data)
 	 */
 	async transcribe(
 		options: {
@@ -626,16 +627,42 @@ export class NanoGPTClient {
 		const { audioUrl, model = 'Whisper-Large-V3', language = 'auto', diarize = false, tagAudioEvents = false, actualDuration } =
 			options;
 
-		const requestBody: Record<string, any> = {
-			audioUrl,
+		const isUrl = audioUrl && (audioUrl.startsWith('http://') || audioUrl.startsWith('https://'));
+
+		if (isUrl) {
+			const requestBody: Record<string, any> = { audioUrl, model, language, diarize, tagAudioEvents };
+			if (actualDuration) requestBody.actualDuration = String(actualDuration);
+			return this.makeRequest('POST', '/transcribe', requestBody);
+		}
+
+		const audioBuffer = Buffer.from(audioUrl || '', 'base64');
+		const fileName = `audio-${Date.now()}.${model?.includes('tts') || model?.includes('gpt') ? 'mp3' : 'wav'}`;
+
+		const formData: any = {
+			audio: {
+				value: audioBuffer,
+				options: {
+					filename: fileName,
+					contentType: 'audio/mpeg',
+				},
+			},
 			model,
 			language,
-			diarize,
-			tagAudioEvents,
 		};
-		if (actualDuration) requestBody.actualDuration = String(actualDuration);
+		if (diarize) formData.diarize = diarize.toString();
+		if (tagAudioEvents) formData.tagAudioEvents = tagAudioEvents.toString();
+		if (actualDuration) formData.actualDuration = String(actualDuration);
 
-		return this.makeRequest('POST', '/transcribe', requestBody);
+		const url = `${this.getBaseUrl()}/api/transcribe`;
+		const httpHeaders: Record<string, string> = { ...this.getAuthHeaders('/transcribe') };
+		delete httpHeaders['Content-Type'];
+		return this.context.helpers.httpRequest({
+			method: 'POST',
+			url,
+			headers: httpHeaders,
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			body: formData as any,
+		});
 	}
 
 	/**
