@@ -33,6 +33,8 @@ import {
 } from './descriptions/parameter-properties-balance';
 import { usageNanoGPTParameterProperties } from './descriptions/parameter-properties-usage';
 import { messagesNanoGPTParameterProperties } from './descriptions/parameter-properties-messages';
+import { aiDetectionNanoGPTParameterProperties } from './descriptions/parameter-properties-ai-detection';
+import { moderationNanoGPTParameterProperties } from './descriptions/parameter-properties-moderation';
 import { dispatchNanoGPTOperation } from './handlers/operation-dispatcher';
 
 export interface NanoGptMessage {
@@ -82,6 +84,11 @@ export class NanoGpt implements INodeType {
 				noDataExpression: true,
 				options: [
 					{
+						name: 'AI Detection',
+						value: 'aiDetection',
+						description: 'AI-text and plagiarism detection',
+					},
+					{
 						name: 'Balance & Subscription',
 						value: 'balance',
 						description: 'Balance and subscription management',
@@ -120,6 +127,11 @@ export class NanoGpt implements INodeType {
 						name: 'Model',
 						value: 'models',
 						description: 'Model management APIs',
+					},
+					{
+						name: 'Moderation',
+						value: 'moderation',
+						description: 'Content moderation and safety classification',
 					},
 					{
 						name: 'Nano Crypto',
@@ -185,6 +197,8 @@ export class NanoGpt implements INodeType {
 			...nanoCryptoNanoGPTParameterProperties,
 			...messagesNanoGPTParameterProperties,
 			...usageNanoGPTParameterProperties,
+			...aiDetectionNanoGPTParameterProperties,
+			...moderationNanoGPTParameterProperties,
 		],
 	};
 
@@ -481,6 +495,25 @@ export class NanoGpt implements INodeType {
 					{ name: '9:16', value: '9:16' },
 					{ name: '1:1', value: '1:1' },
 				];
+			},
+
+			async getModerationModels(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
+				try {
+					const credentials = await this.getCredentials('nanoGPTApi');
+					const baseUrl = credentials.baseUrl === 'custom' ? credentials.customBaseUrl : credentials.baseUrl;
+					const response = await this.helpers.httpRequest({
+						method: 'GET',
+						url: `${baseUrl}/api/v1/moderation-models`,
+						headers: {
+							Authorization: `Bearer ${credentials.apiKey}`,
+							'x-api-key': credentials.apiKey as string,
+						},
+						json: true,
+					});
+					const models = response.data || [];
+					return models.map((m: { id: string }) => ({ name: m.id, value: m.id }));
+				} catch { /* fall through to defaults */ }
+				return [];
 			},
 		},
 	};

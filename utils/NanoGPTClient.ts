@@ -36,6 +36,9 @@ import type {
 	ReceiveNanoResponse,
 	UsageResponse,
 	CountTokensResponse,
+	AIDetectionResponse,
+	ModerationResponse,
+	ModerationModelsResponse,
 } from '../types/nanogpt';
 
 export class NanoGPTClient {
@@ -1168,5 +1171,57 @@ export class NanoGPTClient {
 			const message = error instanceof Error ? error.message : String(error);
 			throw new NodeOperationError(this.context.getNode(), `NanoGPT API request failed: ${message}`);
 		}
+	}
+
+	// ============================================
+	// AI Detection Methods
+	// ============================================
+
+	/**
+	 * Run AI-text or plagiarism detection
+	 * POST /v1/ai-detection
+	 */
+	async aiDetection(
+		options: {
+			text: string;
+			mode?: 'ai' | 'plagiarism';
+		},
+	): Promise<AIDetectionResponse> {
+		const requestBody: Record<string, any> = { text: options.text };
+		if (options.mode) requestBody.mode = options.mode;
+		return this.makeRequest('POST', '/v1/ai-detection', requestBody);
+	}
+
+	// ============================================
+	// Moderation Methods
+	// ============================================
+
+	/**
+	 * Classify content for safety
+	 * POST /v1/moderations
+	 */
+	async moderate(
+		options: {
+			input: string | string[] | Array<Record<string, any>>;
+			model?: string;
+		},
+	): Promise<ModerationResponse> {
+		const requestBody: Record<string, any> = { input: options.input };
+		if (options.model) requestBody.model = options.model;
+		return this.makeRequest('POST', '/v1/moderations', requestBody);
+	}
+
+	/**
+	 * List available moderation models
+	 * GET /v1/moderation-models
+	 */
+	async listModerationModels(
+		options: {
+			detailed?: boolean;
+		} = {},
+	): Promise<ModerationModelsResponse> {
+		const queryParams: Record<string, string> = {};
+		if (options.detailed !== undefined) queryParams.detailed = String(options.detailed);
+		return this.makeRequest('GET', '/v1/moderation-models', undefined, {}, queryParams);
 	}
 }

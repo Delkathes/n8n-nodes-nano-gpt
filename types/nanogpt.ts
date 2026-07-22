@@ -470,3 +470,72 @@ export interface UsageCounterBucket {
 export interface CountTokensResponse {
 	input_tokens: number;
 }
+
+// ============================================
+// AI Detection Types (POST /v1/ai-detection)
+// ============================================
+
+export interface AIDetectionResponse {
+	object: string;
+	mode: string;
+	model: string;
+	content: string;
+	result: {
+		score: number;
+	};
+	word_count: number;
+	usage: {
+		prompt_tokens: number;
+		completion_tokens: number;
+		total_tokens: number;
+	};
+	pricing: {
+		amount: number;
+		currency: string;
+	};
+}
+
+// ============================================
+// Moderation Types (POST /v1/moderations)
+// ============================================
+
+export interface ModerationResponse {
+	id: string;
+	model: string;
+	results: Array<{
+		flagged: boolean;
+		categories: Record<string, boolean>;
+		category_scores?: Record<string, number>;
+	}>;
+	usage?: {
+		prompt_tokens: number;
+		completion_tokens: number;
+		total_tokens: number;
+	};
+}
+
+// ============================================
+// Moderation Models Types (GET /v1/moderation-models)
+// ============================================
+
+export interface ModerationModelsResponse {
+	object: string;
+	data: Array<{
+		id: string;
+		object: string;
+		created: number;
+		owned_by: string;
+		context_length?: number;
+		capabilities?: {
+			text?: boolean;
+			image?: boolean;
+			batch?: boolean;
+		};
+		pricing?: {
+			prompt?: number;
+			completion?: number;
+			currency?: string;
+			unit?: string;
+		};
+	}>;
+}

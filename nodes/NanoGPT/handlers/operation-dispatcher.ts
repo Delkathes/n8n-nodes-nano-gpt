@@ -80,6 +80,12 @@ export async function dispatchNanoGPTOperation(params: DispatchParams): Promise<
 			return handleGetUsage(executeFunctions, client, i);
 		case 'countTokens':
 			return handleCountTokens(executeFunctions, client, i);
+		case 'aiDetection':
+			return handleAIDetection(executeFunctions, client, i);
+		case 'moderate':
+			return handleModerate(executeFunctions, client, i);
+		case 'listModerationModels':
+			return handleListModerationModels(executeFunctions, client, i);
 		default:
 			throw new Error(`Unknown operation: ${operation}`);
 	}
@@ -785,5 +791,49 @@ async function handleCountTokens(
 		toolChoice: countTokensOptions.toolChoice as string,
 	});
 
+	return response as unknown as IDataObject;
+}
+
+async function handleAIDetection(
+	context: IExecuteFunctions,
+	client: NanoGPTClient,
+	i: number,
+): Promise<IDataObject> {
+	const text = context.getNodeParameter('inputText', i) as string;
+	const mode = context.getNodeParameter('detectionMode', i, 'ai') as string;
+
+	const response = await client.aiDetection({
+		text,
+		mode: mode as 'ai' | 'plagiarism',
+	});
+
+	return response as unknown as IDataObject;
+}
+
+async function handleModerate(
+	context: IExecuteFunctions,
+	client: NanoGPTClient,
+	i: number,
+): Promise<IDataObject> {
+	const model = context.getNodeParameter('moderationModel', i, '') as string;
+	const inputRaw = context.getNodeParameter('moderationInput', i);
+	const input = typeof inputRaw === 'string' ? JSON.parse(inputRaw) : inputRaw;
+
+	const response = await client.moderate({
+		input,
+		model: model || undefined,
+	});
+
+	return response as unknown as IDataObject;
+}
+
+async function handleListModerationModels(
+	context: IExecuteFunctions,
+	client: NanoGPTClient,
+	i: number,
+): Promise<IDataObject> {
+	const detailed = context.getNodeParameter('detailed', i, true) as boolean;
+
+	const response = await client.listModerationModels({ detailed });
 	return response as unknown as IDataObject;
 }
