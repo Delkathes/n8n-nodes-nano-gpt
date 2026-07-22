@@ -17,7 +17,7 @@ export const webNanoGPTParameterProperties: INodeProperties[] = [
 				name: 'Scrape URLs',
 				value: 'scrapeUrls',
 				description: 'Scrape web page content',
-				action: 'Scrape URLs',
+				action: 'Scrape ur ls',
 			},
 		],
 		default: 'scrapeUrls',

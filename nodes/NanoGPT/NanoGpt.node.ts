@@ -294,7 +294,7 @@ export class NanoGpt implements INodeType {
 				return [
 					{ name: 'Whisper Large V3 ($0.01/min)', value: 'Whisper-Large-V3' },
 					{ name: 'Wizper ($0.01/min)', value: 'Wizper' },
-					{ name: 'Elevenlabs STT ($0.03/min, async)', value: 'Elevenlabs-STT' },
+					{ name: 'Elevenlabs STT ($0.03/min, Async)', value: 'Elevenlabs-STT' },
 					{ name: 'GPT-4o Mini Transcribe ($0.003/min)', value: 'gpt-4o-mini-transcribe' },
 					{ name: 'OpenAI Whisper Video ($0.06/min)', value: 'openai-whisper-with-video' },
 				];
@@ -309,17 +309,17 @@ export class NanoGpt implements INodeType {
 
 				if (openaiModels.includes(model)) {
 					return [
-						{ name: 'alloy', value: 'alloy' },
-						{ name: 'ash', value: 'ash' },
-						{ name: 'ballad', value: 'ballad' },
-						{ name: 'coral', value: 'coral' },
-						{ name: 'echo', value: 'echo' },
-						{ name: 'fable', value: 'fable' },
-						{ name: 'nova', value: 'nova' },
-						{ name: 'onyx', value: 'onyx' },
-						{ name: 'sage', value: 'sage' },
-						{ name: 'shimmer', value: 'shimmer' },
-						{ name: 'verse', value: 'verse' },
+						{ name: 'Alloy', value: 'alloy' },
+						{ name: 'Ash', value: 'ash' },
+						{ name: 'Ballad', value: 'ballad' },
+						{ name: 'Coral', value: 'coral' },
+						{ name: 'Echo', value: 'echo' },
+						{ name: 'Fable', value: 'fable' },
+						{ name: 'Nova', value: 'nova' },
+						{ name: 'Onyx', value: 'onyx' },
+						{ name: 'Sage', value: 'sage' },
+						{ name: 'Shimmer', value: 'shimmer' },
+						{ name: 'Verse', value: 'verse' },
 					];
 				}
 
@@ -339,30 +339,30 @@ export class NanoGpt implements INodeType {
 
 				if (kokoroModels.includes(model)) {
 					return [
-						{ name: 'af_bella (American Female)', value: 'af_bella' },
-						{ name: 'af_nova (American Female)', value: 'af_nova' },
-						{ name: 'af_aoede (American Female)', value: 'af_aoede' },
-						{ name: 'af_jessica (American Female)', value: 'af_jessica' },
-						{ name: 'af_sarah (American Female)', value: 'af_sarah' },
-						{ name: 'am_adam (American Male)', value: 'am_adam' },
-						{ name: 'am_onyx (American Male)', value: 'am_onyx' },
-						{ name: 'am_eric (American Male)', value: 'am_eric' },
-						{ name: 'am_liam (American Male)', value: 'am_liam' },
-						{ name: 'bf_alice (British Female)', value: 'bf_alice' },
-						{ name: 'bf_emma (British Female)', value: 'bf_emma' },
-						{ name: 'bm_daniel (British Male)', value: 'bm_daniel' },
-						{ name: 'bm_george (British Male)', value: 'bm_george' },
-						{ name: 'jf_alpha (Japanese Female)', value: 'jf_alpha' },
-						{ name: 'zf_xiaoxiao (Chinese Female)', value: 'zf_xiaoxiao' },
-						{ name: 'ff_siwis (French Female)', value: 'ff_siwis' },
-						{ name: 'im_nicola (Italian Male)', value: 'im_nicola' },
+						{ name: 'Af_bella (American Female)', value: 'af_bella' },
+						{ name: 'Af_nova (American Female)', value: 'af_nova' },
+						{ name: 'Af_aoede (American Female)', value: 'af_aoede' },
+						{ name: 'Af_jessica (American Female)', value: 'af_jessica' },
+						{ name: 'Af_sarah (American Female)', value: 'af_sarah' },
+						{ name: 'Am_adam (American Male)', value: 'am_adam' },
+						{ name: 'Am_onyx (American Male)', value: 'am_onyx' },
+						{ name: 'Am_eric (American Male)', value: 'am_eric' },
+						{ name: 'Am_liam (American Male)', value: 'am_liam' },
+						{ name: 'Bf_alice (British Female)', value: 'bf_alice' },
+						{ name: 'Bf_emma (British Female)', value: 'bf_emma' },
+						{ name: 'Bm_daniel (British Male)', value: 'bm_daniel' },
+						{ name: 'Bm_george (British Male)', value: 'bm_george' },
+						{ name: 'Jf_alpha (Japanese Female)', value: 'jf_alpha' },
+						{ name: 'Zf_xiaoxiao (Chinese Female)', value: 'zf_xiaoxiao' },
+						{ name: 'Ff_siwis (French Female)', value: 'ff_siwis' },
+						{ name: 'Im_nicola (Italian Male)', value: 'im_nicola' },
 					];
 				}
 
 				return [
-					{ name: 'alloy', value: 'alloy' },
-					{ name: 'nova', value: 'nova' },
-					{ name: 'shimmer', value: 'shimmer' },
+					{ name: 'Alloy', value: 'alloy' },
+					{ name: 'Nova', value: 'nova' },
+					{ name: 'Shimmer', value: 'shimmer' },
 				];
 			},
 
@@ -417,7 +417,7 @@ export class NanoGpt implements INodeType {
 					const modelData = response.data?.find((m: { id: string }) => m.id === model);
 					const opts = modelData?.supported_parameters?.parameters?.duration?.options;
 					if (opts) return opts.map((o: { value: string; label: string }) => ({ name: o.label, value: o.value }));
-				} catch {}
+				} catch { /* fall through to defaults */ }
 				return [{ name: '5 Seconds', value: '5' }, { name: '10 Seconds', value: '10' }];
 			},
 
@@ -439,7 +439,7 @@ export class NanoGpt implements INodeType {
 					const modelData = response.data?.find((m: { id: string }) => m.id === model);
 					const opts = modelData?.supported_parameters?.parameters?.resolution?.options;
 					if (opts) return opts.map((o: { value: string; label: string }) => ({ name: o.label, value: o.value }));
-				} catch {}
+				} catch { /* fall through to defaults */ }
 				return [{ name: '720p', value: '720p' }, { name: '1080p', value: '1080p' }];
 			},
 
@@ -461,7 +461,7 @@ export class NanoGpt implements INodeType {
 					const modelData = response.data?.find((m: { id: string }) => m.id === model);
 					const opts = modelData?.supported_parameters?.parameters?.aspect_ratio?.options;
 					if (opts) return opts.map((o: { value: string; label: string }) => ({ name: o.label, value: o.value }));
-				} catch {}
+				} catch { /* fall through to defaults */ }
 				return [
 					{ name: '16:9', value: '16:9' },
 					{ name: '9:16', value: '9:16' },

@@ -89,7 +89,7 @@ export const videoNanoGPTParameterProperties: INodeProperties[] = [
 		},
 		options: [
 			{
-				displayName: 'Duration',
+				displayName: 'Duration Name or ID',
 				name: 'duration',
 				type: 'options',
 				typeOptions: {
@@ -97,10 +97,10 @@ export const videoNanoGPTParameterProperties: INodeProperties[] = [
 					loadOptionsDependsOn: ['videoModel'],
 				},
 				default: '5',
-				description: 'Video duration (options depend on selected model)',
+				description: 'Video duration (options depend on selected model). Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
 			},
 			{
-				displayName: 'Aspect Ratio',
+				displayName: 'Aspect Ratio Name or ID',
 				name: 'aspect_ratio',
 				type: 'options',
 				typeOptions: {
@@ -108,10 +108,10 @@ export const videoNanoGPTParameterProperties: INodeProperties[] = [
 					loadOptionsDependsOn: ['videoModel'],
 				},
 				default: '16:9',
-				description: 'Video aspect ratio (options depend on selected model)',
+				description: 'Video aspect ratio (options depend on selected model). Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
 			},
 			{
-				displayName: 'Resolution',
+				displayName: 'Resolution Name or ID',
 				name: 'resolution',
 				type: 'options',
 				typeOptions: {
@@ -119,7 +119,7 @@ export const videoNanoGPTParameterProperties: INodeProperties[] = [
 					loadOptionsDependsOn: ['videoModel'],
 				},
 				default: '720p',
-				description: 'Output resolution (options depend on selected model)',
+				description: 'Output resolution (options depend on selected model). Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
 			},
 			{
 				displayName: 'Image URL (for I2V)',
@@ -303,10 +303,10 @@ export const videoNanoGPTParameterProperties: INodeProperties[] = [
 			},
 		},
 		options: [
-			{ name: 'Video 1 (index 0)', value: 0 },
-			{ name: 'Video 2 (index 1)', value: 1 },
-			{ name: 'Video 3 (index 2)', value: 2 },
-			{ name: 'Video 4 (index 3)', value: 3 },
+			{ name: 'Video 1 (Index 0)', value: 0 },
+			{ name: 'Video 2 (Index 1)', value: 1 },
+			{ name: 'Video 3 (Index 2)', value: 2 },
+			{ name: 'Video 4 (Index 3)', value: 3 },
 		],
 		default: 0,
 		description: 'Which of the 4 Midjourney videos to extend (0-3)',

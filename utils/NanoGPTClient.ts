@@ -611,8 +611,8 @@ export class NanoGPTClient {
 
 	/**
 	 * Transcribe audio file
-	 * POST /transcribe
-	 * Supports URL input (JSON body) and base64 input (multipart/form-data)
+	 * URL inputs: POST /transcribe (JSON body, NanoGPT-specific endpoint)
+	 * Base64 inputs: POST /v1/audio/transcriptions (multipart/form-data, OpenAI-compatible)
 	 */
 	async transcribe(
 		options: {
@@ -636,36 +636,55 @@ export class NanoGPTClient {
 			return this.makeRequest('POST', '/transcribe', requestBody);
 		}
 
-		const audioBuffer = Buffer.from(audioUrl || '', 'base64');
-		const ct = contentType || 'audio/mpeg';
-		const ext = ct.split('/')[1] || 'mp3';
+		const ext = (contentType || 'audio/mpeg').split('/')[1] || 'mp3';
 		const fileName = `audio-${Date.now()}.${ext}`;
+		const audioBuffer = Buffer.from(audioUrl || '', 'base64');
 
-		const formData: any = {
-			audio: {
-				value: audioBuffer,
-				options: {
-					filename: fileName,
-					contentType: ct,
+		const boundary = `----NanoGPTPart${Math.random().toString(36).slice(2)}`;
+		const parts: Buffer[] = [];
+
+		parts.push(Buffer.from(`--${boundary}\r\n`));
+		parts.push(Buffer.from(`Content-Disposition: form-data; name="file"; filename="${fileName}"\r\n`));
+		parts.push(Buffer.from('\r\n'));
+		parts.push(audioBuffer);
+		parts.push(Buffer.from('\r\n'));
+
+		parts.push(Buffer.from(`--${boundary}\r\nContent-Disposition: form-data; name="model"\r\n\r\n${model}\r\n`));
+
+		if (language && language !== 'auto') {
+			parts.push(Buffer.from(`--${boundary}\r\nContent-Disposition: form-data; name="language"\r\n\r\n${language}\r\n`));
+		}
+
+		parts.push(Buffer.from(`--${boundary}--\r\n`));
+		const body = Buffer.concat(parts);
+
+		try {
+			const baseUrl = this.getBaseUrl();
+			const url = `${baseUrl}/api/v1/audio/transcriptions`;
+			const authHeaders = this.getAuthHeaders('/v1/audio/transcriptions');
+
+			const response = await this.context.helpers.httpRequest({
+				method: 'POST',
+				url,
+				headers: {
+					...authHeaders,
+					'Content-Type': `multipart/form-data; boundary=${boundary}`,
 				},
-			},
-			model,
-			language,
-		};
-		if (diarize) formData.diarize = diarize.toString();
-		if (tagAudioEvents) formData.tagAudioEvents = tagAudioEvents.toString();
-		if (actualDuration) formData.actualDuration = String(actualDuration);
+				body,
+				json: false,
+				returnFullResponse: true,
+			});
 
-		const url = `${this.getBaseUrl()}/api/transcribe`;
-		const httpHeaders: Record<string, string> = { ...this.getAuthHeaders('/transcribe') };
-		delete httpHeaders['Content-Type'];
-		return this.context.helpers.httpRequest({
-			method: 'POST',
-			url,
-			headers: httpHeaders,
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			body: formData as any,
-		});
+			if (response.statusCode && response.statusCode >= 400) {
+				const responseBody = typeof response.body === 'string' ? response.body : JSON.stringify(response.body);
+				throw new NodeOperationError(this.context.getNode(), `NanoGPT API request failed with status code ${response.statusCode}: ${responseBody}`);
+			}
+
+			return typeof response.body === 'string' ? JSON.parse(response.body) : response.body;
+		} catch (error: unknown) {
+			const message = error instanceof Error ? error.message : String(error);
+			throw new NodeOperationError(this.context.getNode(), `NanoGPT API request failed: ${message}`);
+		}
 	}
 
 	/**
@@ -741,7 +760,7 @@ export class NanoGPTClient {
 		if (similarityBoost !== undefined) requestBody.similarity_boost = similarityBoost;
 		if (style !== undefined) requestBody.style = style;
 
-		let url = `${this.getBaseUrl()}/api/tts`;
+		const url = `${this.getBaseUrl()}/api/tts`;
 
 		const response = await this.context.helpers.httpRequest({
 			method: 'POST',
@@ -752,19 +771,26 @@ export class NanoGPTClient {
 			},
 			body: requestBody,
 			returnFullResponse: true,
+			encoding: 'arraybuffer',
 		});
 
 		const contentType = (response.headers['content-type'] as string) || '';
 
 		if (contentType.includes('application/json') || response.headers['content-length'] < 500) {
-			const json = typeof response.body === 'string' ? JSON.parse(response.body) : response.body;
+			const json = Buffer.isBuffer(response.body)
+				? JSON.parse(response.body.toString('utf-8'))
+				: typeof response.body === 'string'
+					? JSON.parse(response.body)
+					: response.body;
 			if (json.status === 'pending' || json.runId) return json;
 			return json;
 		}
 
 		return {
 			status: 'completed',
-			audio: Buffer.from(response.body as string).toString('base64'),
+			audio: Buffer.isBuffer(response.body)
+				? response.body.toString('base64')
+				: Buffer.from(response.body as string).toString('base64'),
 			contentType: contentType || 'audio/mpeg',
 			model,
 		};
