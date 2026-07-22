@@ -34,6 +34,8 @@ import type {
 	SubscriptionUsageResponse,
 	CreateInvitationResponse,
 	ReceiveNanoResponse,
+	UsageResponse,
+	CountTokensResponse,
 } from '../types/nanogpt';
 
 export class NanoGPTClient {
@@ -1091,5 +1093,80 @@ export class NanoGPTClient {
 	 */
 	async receiveNano(): Promise<ReceiveNanoResponse> {
 		return this.makeRequest('POST', '/receive-nano');
+	}
+
+	// ============================================
+	// Usage Methods
+	// ============================================
+
+	/**
+	 * Get API usage statistics
+	 * GET /v1/usage
+	 */
+	async getUsage(
+		options: {
+			from?: string;
+			to?: string;
+			groupBy?: string;
+			scope?: string;
+			apiKeyId?: number;
+		} = {},
+	): Promise<UsageResponse> {
+		const queryParams: Record<string, string> = {};
+		if (options.from) queryParams.from = options.from;
+		if (options.to) queryParams.to = options.to;
+		if (options.groupBy) queryParams.group_by = options.groupBy;
+		if (options.scope) queryParams.scope = options.scope;
+		if (options.apiKeyId !== undefined) queryParams.api_key_id = String(options.apiKeyId);
+		return this.makeRequest('GET', '/v1/usage', undefined, {}, queryParams);
+	}
+
+	// ============================================
+	// Messages Methods
+	// ============================================
+
+	/**
+	 * Count tokens for messages (Anthropic-compatible)
+	 * POST /v1/messages/count_tokens
+	 */
+	async countTokens(
+		options: {
+			model: string;
+			system?: string;
+			messages: Array<{ role: string; content: string }>;
+			tools?: any[];
+			toolChoice?: string;
+		},
+	): Promise<CountTokensResponse> {
+		const requestBody: Record<string, any> = {
+			model: options.model,
+			messages: options.messages,
+		};
+		if (options.system) requestBody.system = options.system;
+		if (options.tools && options.tools.length > 0) requestBody.tools = options.tools;
+		if (options.toolChoice) requestBody.tool_choice = options.toolChoice;
+
+		try {
+			const url = `${this.getBaseUrl()}/api/v1/messages/count_tokens`;
+			const response = await this.context.helpers.httpRequest({
+				method: 'POST',
+				url,
+				headers: {
+					...this.getAuthHeaders('/v1/messages/count_tokens'),
+					'Content-Type': 'application/json',
+				},
+				body: requestBody,
+				returnFullResponse: true,
+			});
+
+			if (response.statusCode && response.statusCode >= 400) {
+				throw new NodeOperationError(this.context.getNode(), `NanoGPT API Error: ${typeof response.body === 'string' ? response.body : JSON.stringify(response.body)}`);
+			}
+
+			return typeof response.body === 'string' ? JSON.parse(response.body) : response.body;
+		} catch (error: unknown) {
+			const message = error instanceof Error ? error.message : String(error);
+			throw new NodeOperationError(this.context.getNode(), `NanoGPT API request failed: ${message}`);
+		}
 	}
 }

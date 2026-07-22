@@ -76,6 +76,10 @@ export async function dispatchNanoGPTOperation(params: DispatchParams): Promise<
 			return handleBalanceOperation(executeFunctions, client, i, operation);
 		case 'receiveNano':
 			return handleNanoCryptoOperation(executeFunctions, client);
+		case 'getUsage':
+			return handleGetUsage(executeFunctions, client, i);
+		case 'countTokens':
+			return handleCountTokens(executeFunctions, client, i);
 		default:
 			throw new Error(`Unknown operation: ${operation}`);
 	}
@@ -739,5 +743,47 @@ async function handleNanoCryptoOperation(
 	client: NanoGPTClient,
 ): Promise<IDataObject> {
 	const response = await client.receiveNano();
+	return response as unknown as IDataObject;
+}
+
+async function handleGetUsage(
+	context: IExecuteFunctions,
+	client: NanoGPTClient,
+	i: number,
+): Promise<IDataObject> {
+	const usageOptions = context.getNodeParameter('usageOptions', i, {}) as IDataObject;
+
+	const response = await client.getUsage({
+		from: usageOptions.from as string,
+		to: usageOptions.to as string,
+		groupBy: usageOptions.groupBy as string,
+		scope: usageOptions.scope as string,
+		apiKeyId: usageOptions.apiKeyId as number,
+	});
+
+	return response as unknown as IDataObject;
+}
+
+async function handleCountTokens(
+	context: IExecuteFunctions,
+	client: NanoGPTClient,
+	i: number,
+): Promise<IDataObject> {
+	const model = context.getNodeParameter('messageModel', i) as string;
+	const messagesRaw = context.getNodeParameter('messages', i);
+	const messages = typeof messagesRaw === 'string' ? JSON.parse(messagesRaw) : messagesRaw;
+	const countTokensOptions = context.getNodeParameter('countTokensOptions', i, {}) as IDataObject;
+
+	const toolsRaw = countTokensOptions.tools;
+	const tools = typeof toolsRaw === 'string' ? JSON.parse(toolsRaw as string) : toolsRaw;
+
+	const response = await client.countTokens({
+		model,
+		messages,
+		system: countTokensOptions.system as string,
+		tools: tools as any[],
+		toolChoice: countTokensOptions.toolChoice as string,
+	});
+
 	return response as unknown as IDataObject;
 }

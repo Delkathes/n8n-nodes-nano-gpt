@@ -425,3 +425,48 @@ export interface ReceiveNanoResponse {
 	}>;
 	total_received?: string;
 }
+
+// ============================================
+// Usage Types (GET /v1/usage)
+// ============================================
+
+export interface UsageResponse {
+	object: 'usage';
+	scope: string;
+	apiKey: { id: number };
+	from: string;
+	to: string;
+	timezone: string;
+	groupBy: string;
+	asOf: string;
+	source: {
+		rollupDays: string[];
+		liveDays: string[];
+		missingRollupDays: string[];
+	};
+	totals: UsageCounterBucket;
+	byDay?: UsageCounterBucket[];
+	byModel?: UsageCounterBucket[];
+	byDayModel?: UsageCounterBucket[];
+}
+
+export interface UsageCounterBucket {
+	date?: string;
+	model?: string;
+	requests: number;
+	costUsd: number;
+	refundedUsd: number;
+	netCostUsd: number;
+	inputTokens: number;
+	outputTokens: number;
+	reasoningTokens: number;
+	totalTokens: number;
+}
+
+// ============================================
+// Messages Count Tokens Types (POST /v1/messages/count_tokens)
+// ============================================
+
+export interface CountTokensResponse {
+	input_tokens: number;
+}

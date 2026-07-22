@@ -31,6 +31,8 @@ import {
 	balanceNanoGPTParameterProperties,
 	nanoCryptoNanoGPTParameterProperties,
 } from './descriptions/parameter-properties-balance';
+import { usageNanoGPTParameterProperties } from './descriptions/parameter-properties-usage';
+import { messagesNanoGPTParameterProperties } from './descriptions/parameter-properties-messages';
 import { dispatchNanoGPTOperation } from './handlers/operation-dispatcher';
 
 export interface NanoGptMessage {
@@ -105,6 +107,11 @@ export class NanoGpt implements INodeType {
 						description: 'Image generation APIs',
 					},
 					{
+						name: 'Message',
+						value: 'messages',
+						description: 'Messages token counting APIs',
+					},
+					{
 						name: 'Midjourney',
 						value: 'midjourney',
 						description: 'Midjourney generation status',
@@ -140,6 +147,11 @@ export class NanoGpt implements INodeType {
 						description: 'Text-to-speech APIs',
 					},
 					{
+						name: 'Usage',
+						value: 'usage',
+						description: 'API usage statistics',
+					},
+					{
 						name: 'Video Generation',
 						value: 'videoGeneration',
 						description: 'Video generation APIs',
@@ -171,6 +183,8 @@ export class NanoGpt implements INodeType {
 			...midjourneyNanoGPTParameterProperties,
 			...balanceNanoGPTParameterProperties,
 			...nanoCryptoNanoGPTParameterProperties,
+			...messagesNanoGPTParameterProperties,
+			...usageNanoGPTParameterProperties,
 		],
 	};
 
