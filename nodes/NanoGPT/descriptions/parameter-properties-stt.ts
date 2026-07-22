@@ -23,7 +23,7 @@ export const sttNanoGPTParameterProperties: INodeProperties[] = [
 				name: 'YouTube Transcription',
 				value: 'youtubeTranscribe',
 				description: 'Transcribe YouTube video',
-				action: 'Transcribe you tube',
+				action: 'Transcribe YouTube',
 			},
 			{
 				name: 'Get Speech-to-Text Status',

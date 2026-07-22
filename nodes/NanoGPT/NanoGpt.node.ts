@@ -294,7 +294,9 @@ export class NanoGpt implements INodeType {
 				return [
 					{ name: 'Whisper Large V3 ($0.01/min)', value: 'Whisper-Large-V3' },
 					{ name: 'Wizper ($0.01/min)', value: 'Wizper' },
-					{ name: 'Elevenlabs STT ($0.03/min, Async)', value: 'Elevenlabs-STT' },
+					{ name: 'Elevenlabs STT ($0.03/min, async)', value: 'Elevenlabs-STT' },
+					{ name: 'GPT-4o Mini Transcribe ($0.003/min)', value: 'gpt-4o-mini-transcribe' },
+					{ name: 'OpenAI Whisper Video ($0.06/min)', value: 'openai-whisper-with-video' },
 				];
 			},
 

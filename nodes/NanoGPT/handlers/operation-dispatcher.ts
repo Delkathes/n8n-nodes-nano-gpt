@@ -423,6 +423,7 @@ async function handleTranscribe(
 		language: advancedOptions.language as string,
 		diarize: advancedOptions.diarize as boolean,
 		tagAudioEvents: advancedOptions.tagAudioEvents as boolean,
+		actualDuration: advancedOptions.actualDuration ? (advancedOptions.actualDuration as number) : undefined,
 	});
 
 	return response as unknown as IDataObject;

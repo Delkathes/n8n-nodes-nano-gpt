@@ -620,18 +620,22 @@ export class NanoGPTClient {
 			language?: string;
 			diarize?: boolean;
 			tagAudioEvents?: boolean;
+			actualDuration?: number;
 		} = {},
 	): Promise<TranscribeResponse> {
-		const { audioUrl, model = 'Whisper-Large-V3', language = 'auto', diarize = false, tagAudioEvents = false } =
+		const { audioUrl, model = 'Whisper-Large-V3', language = 'auto', diarize = false, tagAudioEvents = false, actualDuration } =
 			options;
 
-		return this.makeRequest('POST', '/transcribe', {
+		const requestBody: Record<string, any> = {
 			audioUrl,
 			model,
 			language,
 			diarize,
 			tagAudioEvents,
-		});
+		};
+		if (actualDuration) requestBody.actualDuration = String(actualDuration);
+
+		return this.makeRequest('POST', '/transcribe', requestBody);
 	}
 
 	/**
