@@ -85,7 +85,7 @@ export const chatNanoGPTParameterProperties: INodeProperties[] = [
 		},
 		default: '',
 		required: true,
-		description: 'The ID of the response to retrieve or delete',
+		description: 'The ID of the response to retrieve or delete. Use the ID field from a Create Response output (requires Store enabled).',
 	},
 
 	{

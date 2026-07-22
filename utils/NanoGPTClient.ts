@@ -287,7 +287,7 @@ export class NanoGPTClient {
 			include?: string[];
 		} = {},
 	): Promise<CreateResponseResponse> {
-		const requestBody: Record<string, any> = { model, input };
+		const requestBody: Record<string, any> = { model, input, store: true };
 
 		if (options.instructions) requestBody.instructions = options.instructions;
 		if (options.maxOutputTokens) requestBody.max_output_tokens = options.maxOutputTokens;

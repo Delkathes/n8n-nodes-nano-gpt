@@ -216,6 +216,7 @@ async function handleCreateResponse(
 	const model = context.getNodeParameter('model', i) as string;
 	const input = context.getNodeParameter('responseInput', i) as string;
 	const instructions = context.getNodeParameter('instructions', i, '') as string;
+	const advanced = context.getNodeParameter('responsesAdvancedOptions', i, {}) as IDataObject;
 
 	if (!input || input.trim() === '') {
 		throw new Error('Input cannot be empty');
@@ -223,6 +224,22 @@ async function handleCreateResponse(
 
 	const response = await client.createResponse(model, input, {
 		instructions: instructions || undefined,
+		store: advanced.store !== undefined ? advanced.store as boolean : true,
+		maxOutputTokens: advanced.max_output_tokens as number,
+		temperature: advanced.temperature as number,
+		topP: advanced.top_p as number,
+		frequencyPenalty: advanced.frequency_penalty as number,
+		presencePenalty: advanced.presence_penalty as number,
+		topLogprobs: advanced.top_logprobs as number,
+		seed: advanced.seed as number,
+		previousResponseId: advanced.previous_response_id as string || undefined,
+		maxToolCalls: advanced.max_tool_calls as number,
+		parallelToolCalls: advanced.parallel_tool_calls !== undefined ? advanced.parallel_tool_calls as boolean : undefined,
+		toolChoice: advanced.tool_choice as string || undefined,
+		background: advanced.background !== undefined ? advanced.background as boolean : undefined,
+		truncation: advanced.truncation as string || undefined,
+		serviceTier: advanced.service_tier as string || undefined,
+		user: advanced.user as string || undefined,
 	});
 
 	return response as unknown as IDataObject;
