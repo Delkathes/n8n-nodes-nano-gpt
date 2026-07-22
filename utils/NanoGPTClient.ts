@@ -676,6 +676,7 @@ export class NanoGPTClient {
 	/**
 	 * Generate speech (async TTS)
 	 * POST /tts
+	 * Returns JSON with audioUrl for Kokoro, binary MP3 for OpenAI models
 	 */
 	async textToSpeech(
 		text: string,
@@ -710,7 +711,33 @@ export class NanoGPTClient {
 		if (similarityBoost !== undefined) requestBody.similarity_boost = similarityBoost;
 		if (style !== undefined) requestBody.style = style;
 
-		return this.makeRequest('POST', '/tts', requestBody);
+		let url = `${this.getBaseUrl()}/api/tts`;
+
+		const response = await this.context.helpers.httpRequest({
+			method: 'POST',
+			url,
+			headers: {
+				...this.getAuthHeaders('/tts'),
+				'Content-Type': 'application/json',
+			},
+			body: requestBody,
+			returnFullResponse: true,
+		});
+
+		const contentType = (response.headers['content-type'] as string) || '';
+
+		if (contentType.includes('application/json') || response.headers['content-length'] < 500) {
+			const json = typeof response.body === 'string' ? JSON.parse(response.body) : response.body;
+			if (json.status === 'pending' || json.runId) return json;
+			return json;
+		}
+
+		return {
+			status: 'completed',
+			audio: Buffer.from(response.body as string).toString('base64'),
+			contentType: contentType || 'audio/mpeg',
+			model,
+		};
 	}
 
 	/**

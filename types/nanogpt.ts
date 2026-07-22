@@ -256,9 +256,12 @@ export interface YouTubeTranscribeResponse {
 // ============================================
 
 export interface TextToSpeechResponse {
-	status: 'pending' | 'processing' | 'completed' | 'failed';
+	status?: 'pending' | 'processing' | 'completed' | 'failed';
 	runId?: string;
 	audioUrl?: string;
+	audio?: string;
+	contentType?: string;
+	model?: string;
 	message?: string;
 }
 
