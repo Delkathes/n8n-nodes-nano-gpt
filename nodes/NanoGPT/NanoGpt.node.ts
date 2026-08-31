@@ -18,7 +18,7 @@ import { NanoGPTClient } from '../../utils/NanoGPTClient';
  * Handles arrays of strings, arrays of {value,label|name} objects, and
  * {options:[...]} / {values:[...]} wrappers.
  */
-function extractParameterOptions(value: unknown): INodePropertyOptions[] | undefined {
+export function extractParameterOptions(value: unknown): INodePropertyOptions[] | undefined {
 	if (!value) return undefined;
 
 	if (Array.isArray(value)) {

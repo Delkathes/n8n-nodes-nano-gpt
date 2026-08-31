@@ -82,7 +82,7 @@ Operations are grouped by resource.
 ## Compatibility
 
 - Package is built with the n8n community node tooling (`@n8n/node-cli`).
-- Peer dependency: `n8n-workflow@^2.16.0`.
+- Peer dependency: `n8n-workflow` (any version supported by your n8n instance).
 
 ## Development
 
