@@ -29,7 +29,7 @@
     "dev": "n8n-node dev",
     "lint": "n8n-node lint",
     "lint:fix": "n8n-node lint --fix",
-    "release": "n8n-node release",
+    "release": "release-it",
     "prepublishOnly": "n8n-node prerelease"
   },
   "files": [
@@ -47,11 +47,10 @@
   },
   "devDependencies": {
     "@n8n/node-cli": "0.45.6",
-    "@release-it-plugins/lerna-changelog": "^9.0.0",
     "@release-it/conventional-changelog": "^12.0.0",
     "eslint": "9.39.5",
     "prettier": "3.9.6",
-    "release-it": "21.0.2",
+    "release-it": "20.1.0",
     "typescript": "5.9.3"
   },
   "peerDependencies": {
