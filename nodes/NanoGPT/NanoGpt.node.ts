@@ -1,4 +1,4 @@
-/* eslint-disable @n8n/community-nodes/no-http-request-with-manual-auth, @n8n/community-nodes/icon-prefer-themed-variants */
+/* eslint-disable @n8n/community-nodes/icon-prefer-themed-variants */
 
 import {
 	type IExecuteFunctions,
@@ -12,6 +12,40 @@ import {
 } from 'n8n-workflow';
 
 import { NanoGPTClient } from '../../utils/NanoGPTClient';
+
+/**
+ * Defensively extract dropdown options from a supported_parameters sub-object.
+ * Handles arrays of strings, arrays of {value,label|name} objects, and
+ * {options:[...]} / {values:[...]} wrappers.
+ */
+function extractParameterOptions(value: unknown): INodePropertyOptions[] | undefined {
+	if (!value) return undefined;
+
+	if (Array.isArray(value)) {
+		const options: INodePropertyOptions[] = [];
+		for (const entry of value) {
+			if (typeof entry === 'string') {
+				options.push({ name: entry, value: entry });
+			} else if (entry && typeof entry === 'object') {
+				const o = entry as { value?: unknown; label?: string; name?: string };
+				if (o.value !== undefined && o.value !== null) {
+					options.push({ name: o.label || o.name || String(o.value), value: String(o.value) });
+				}
+			}
+		}
+		return options.length > 0 ? options : undefined;
+	}
+
+	if (typeof value === 'object') {
+		const wrapped = (value as { options?: unknown; values?: unknown }).options
+			?? (value as { options?: unknown; values?: unknown }).values;
+		if (wrapped !== undefined) {
+			return extractParameterOptions(wrapped);
+		}
+	}
+
+	return undefined;
+}
 
 import { chatNanoGPTParameterProperties } from './descriptions/parameter-properties-chat';
 import { textGenerationNanoGPTParameterProperties } from './descriptions/parameter-properties-text-generation';
@@ -215,13 +249,9 @@ export class NanoGpt implements INodeType {
 				const credentials = await this.getCredentials('nanoGPTApi');
 				const baseUrl = credentials.baseUrl === 'custom' ? credentials.customBaseUrl : credentials.baseUrl;
 				try {
-					const response = await this.helpers.httpRequest({
+					const response = await this.helpers.httpRequestWithAuthentication.call(this, 'nanoGPTApi', {
 						method: 'GET',
 						url: `${baseUrl}/api/v1/models`,
-						headers: {
-							Authorization: `Bearer ${credentials.apiKey}`,
-							'x-api-key': credentials.apiKey as string,
-						},
 						json: true,
 					});
 
@@ -242,27 +272,23 @@ export class NanoGpt implements INodeType {
 				const credentials = await this.getCredentials('nanoGPTApi');
 				const baseUrl = credentials.baseUrl === 'custom' ? credentials.customBaseUrl : credentials.baseUrl;
 				try {
-					const response = await this.helpers.httpRequest({
+					const response = await this.helpers.httpRequestWithAuthentication.call(this, 'nanoGPTApi', {
 						method: 'GET',
-						url: `${baseUrl}/api/models`,
-						headers: {
-							Authorization: `Bearer ${credentials.apiKey}`,
-							'x-api-key': credentials.apiKey as string,
-						},
+						url: `${baseUrl}/api/v1/images/models`,
 						json: true,
 					});
 
-					const imageModels = response.models?.image || {};
-					const models: INodePropertyOptions[] = [];
-
-					for (const [modelId, modelData] of Object.entries(imageModels)) {
-						const data = modelData as { name: string; model: string };
-						models.push({ name: data.name || modelId, value: data.model });
+					const models = response.data || [];
+					if (Array.isArray(models)) {
+						return models
+							.map((m: { id: string; name?: string }) => ({
+								name: m.name || m.id,
+								value: m.id,
+							}))
+							.sort((a, b) => a.name.localeCompare(b.name));
 					}
 
-					return models.length > 0
-						? models.sort((a, b) => a.name.localeCompare(b.name))
-						: [];
+					return [];
 				} catch {
 					return [
 						{ name: 'Nano Banana Pro', value: 'nano-banana-pro' },
@@ -282,27 +308,23 @@ export class NanoGpt implements INodeType {
 				const credentials = await this.getCredentials('nanoGPTApi');
 				const baseUrl = credentials.baseUrl === 'custom' ? credentials.customBaseUrl : credentials.baseUrl;
 				try {
-					const response = await this.helpers.httpRequest({
+					const response = await this.helpers.httpRequestWithAuthentication.call(this, 'nanoGPTApi', {
 						method: 'GET',
-						url: `${baseUrl}/api/models`,
-						headers: {
-							Authorization: `Bearer ${credentials.apiKey}`,
-							'x-api-key': credentials.apiKey as string,
-						},
+						url: `${baseUrl}/api/v1/video-models`,
 						json: true,
 					});
 
-					const videoModels = response.models?.video || {};
-					const models: INodePropertyOptions[] = [];
-
-					for (const [modelId, modelData] of Object.entries(videoModels)) {
-						const data = modelData as { name?: string };
-						models.push({ name: data.name || modelId, value: modelId });
+					const models = response.data || [];
+					if (Array.isArray(models)) {
+						return models
+							.map((m: { id: string; name?: string }) => ({
+								name: m.name || m.id,
+								value: m.id,
+							}))
+							.sort((a, b) => a.name.localeCompare(b.name));
 					}
 
-					return models.length > 0
-						? models.sort((a, b) => a.name.localeCompare(b.name))
-						: [];
+					return [];
 				} catch {
 					return [
 						{ name: 'VEO 2', value: 'veo2-video' },
@@ -405,13 +427,9 @@ export class NanoGpt implements INodeType {
 				const credentials = await this.getCredentials('nanoGPTApi');
 				const baseUrl = credentials.baseUrl === 'custom' ? credentials.customBaseUrl : credentials.baseUrl;
 				try {
-					const response = await this.helpers.httpRequest({
+					const response = await this.helpers.httpRequestWithAuthentication.call(this, 'nanoGPTApi', {
 						method: 'GET',
 						url: `${baseUrl}/api/v1/embedding-models`,
-						headers: {
-							Authorization: `Bearer ${credentials.apiKey}`,
-							'x-api-key': credentials.apiKey as string,
-						},
 						json: true,
 					});
 
@@ -440,18 +458,15 @@ export class NanoGpt implements INodeType {
 				try {
 					const credentials = await this.getCredentials('nanoGPTApi');
 					const baseUrl = credentials.baseUrl === 'custom' ? credentials.customBaseUrl : credentials.baseUrl;
-					const response = await this.helpers.httpRequest({
+					const response = await this.helpers.httpRequestWithAuthentication.call(this, 'nanoGPTApi', {
 						method: 'GET',
 						url: `${baseUrl}/api/v1/video-models?detailed=true`,
-						headers: {
-							Authorization: `Bearer ${credentials.apiKey}`,
-							'x-api-key': credentials.apiKey as string,
-						},
 						json: true,
 					});
 					const modelData = response.data?.find((m: { id: string }) => m.id === model);
-					const opts = modelData?.supported_parameters?.parameters?.duration?.options;
-					if (opts) return opts.map((o: { value: string; label: string }) => ({ name: o.label, value: o.value }));
+					const sp = modelData?.supported_parameters;
+					const opts = extractParameterOptions(sp?.duration ?? sp?.parameters?.duration);
+					if (opts && opts.length > 0) return opts;
 				} catch { /* fall through to defaults */ }
 				return [{ name: '5 Seconds', value: '5' }, { name: '10 Seconds', value: '10' }];
 			},
@@ -462,18 +477,15 @@ export class NanoGpt implements INodeType {
 				try {
 					const credentials = await this.getCredentials('nanoGPTApi');
 					const baseUrl = credentials.baseUrl === 'custom' ? credentials.customBaseUrl : credentials.baseUrl;
-					const response = await this.helpers.httpRequest({
+					const response = await this.helpers.httpRequestWithAuthentication.call(this, 'nanoGPTApi', {
 						method: 'GET',
 						url: `${baseUrl}/api/v1/video-models?detailed=true`,
-						headers: {
-							Authorization: `Bearer ${credentials.apiKey}`,
-							'x-api-key': credentials.apiKey as string,
-						},
 						json: true,
 					});
 					const modelData = response.data?.find((m: { id: string }) => m.id === model);
-					const opts = modelData?.supported_parameters?.parameters?.resolution?.options;
-					if (opts) return opts.map((o: { value: string; label: string }) => ({ name: o.label, value: o.value }));
+					const sp = modelData?.supported_parameters;
+					const opts = extractParameterOptions(sp?.resolution ?? sp?.parameters?.resolution);
+					if (opts && opts.length > 0) return opts;
 				} catch { /* fall through to defaults */ }
 				return [{ name: '720p', value: '720p' }, { name: '1080p', value: '1080p' }];
 			},
@@ -484,18 +496,15 @@ export class NanoGpt implements INodeType {
 				try {
 					const credentials = await this.getCredentials('nanoGPTApi');
 					const baseUrl = credentials.baseUrl === 'custom' ? credentials.customBaseUrl : credentials.baseUrl;
-					const response = await this.helpers.httpRequest({
+					const response = await this.helpers.httpRequestWithAuthentication.call(this, 'nanoGPTApi', {
 						method: 'GET',
 						url: `${baseUrl}/api/v1/video-models?detailed=true`,
-						headers: {
-							Authorization: `Bearer ${credentials.apiKey}`,
-							'x-api-key': credentials.apiKey as string,
-						},
 						json: true,
 					});
 					const modelData = response.data?.find((m: { id: string }) => m.id === model);
-					const opts = modelData?.supported_parameters?.parameters?.aspect_ratio?.options;
-					if (opts) return opts.map((o: { value: string; label: string }) => ({ name: o.label, value: o.value }));
+					const sp = modelData?.supported_parameters;
+					const opts = extractParameterOptions(sp?.aspect_ratio ?? sp?.parameters?.aspect_ratio);
+					if (opts && opts.length > 0) return opts;
 				} catch { /* fall through to defaults */ }
 				return [
 					{ name: '16:9', value: '16:9' },
@@ -508,13 +517,9 @@ export class NanoGpt implements INodeType {
 				try {
 					const credentials = await this.getCredentials('nanoGPTApi');
 					const baseUrl = credentials.baseUrl === 'custom' ? credentials.customBaseUrl : credentials.baseUrl;
-					const response = await this.helpers.httpRequest({
+					const response = await this.helpers.httpRequestWithAuthentication.call(this, 'nanoGPTApi', {
 						method: 'GET',
 						url: `${baseUrl}/api/v1/moderation-models`,
-						headers: {
-							Authorization: `Bearer ${credentials.apiKey}`,
-							'x-api-key': credentials.apiKey as string,
-						},
 						json: true,
 					});
 					const models = response.data || [];
@@ -529,12 +534,12 @@ export class NanoGpt implements INodeType {
 		const items = this.getInputData();
 		const returnData: INodeExecutionData[] = [];
 
+		const credentials = await this.getCredentials('nanoGPTApi');
+		const client = new NanoGPTClient(this, credentials);
+
 		for (let i = 0; i < items.length; i++) {
 			try {
 				const operation = this.getNodeParameter('operation', i) as string;
-
-				const credentials = await this.getCredentials('nanoGPTApi', i);
-				const client = new NanoGPTClient(this, credentials);
 
 				const responseData = await dispatchNanoGPTOperation({
 					executeFunctions: this,

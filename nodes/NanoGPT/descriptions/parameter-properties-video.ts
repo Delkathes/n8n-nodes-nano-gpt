@@ -50,6 +50,7 @@ export const videoNanoGPTParameterProperties: INodeProperties[] = [
 		displayName: 'Prompt',
 		name: 'prompt',
 		type: 'string',
+		required: true,
 		displayOptions: {
 			show: {
 				operation: ['generateVideo'],

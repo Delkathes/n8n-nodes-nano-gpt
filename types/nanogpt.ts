@@ -417,13 +417,10 @@ export interface CreateInvitationResponse {
 // ============================================
 
 export interface ReceiveNanoResponse {
-	received: boolean;
-	transactions?: Array<{
-		hash: string;
-		amount: string;
-		from: string;
-	}>;
+	success: boolean;
+	received_blocks?: string[];
 	total_received?: string;
+	message?: string;
 }
 
 // ============================================

@@ -27,6 +27,7 @@ export const imageNanoGPTParameterProperties: INodeProperties[] = [
 		displayName: 'Prompt',
 		name: 'prompt',
 		type: 'string',
+		required: true,
 		displayOptions: {
 			show: {
 				operation: ['generateImage'],

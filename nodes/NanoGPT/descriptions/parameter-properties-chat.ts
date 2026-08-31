@@ -65,6 +65,7 @@ export const chatNanoGPTParameterProperties: INodeProperties[] = [
 		displayName: 'Messages',
 		name: 'messages',
 		type: 'json',
+		required: true,
 		displayOptions: {
 			show: {
 				operation: ['chatCompletion', 'createMessage'],

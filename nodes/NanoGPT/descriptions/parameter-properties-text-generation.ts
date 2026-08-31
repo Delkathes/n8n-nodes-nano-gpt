@@ -27,6 +27,7 @@ export const textGenerationNanoGPTParameterProperties: INodeProperties[] = [
 		displayName: 'Prompt',
 		name: 'prompt',
 		type: 'string',
+		required: true,
 		displayOptions: {
 			show: {
 				operation: ['completion'],

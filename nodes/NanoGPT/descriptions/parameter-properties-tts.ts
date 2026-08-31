@@ -191,4 +191,38 @@ export const ttsNanoGPTParameterProperties: INodeProperties[] = [
 		default: '',
 		description: 'TTS task ID to check status',
 	},
+	{
+		displayName: 'Advanced Options',
+		name: 'ttsStatusAdvancedOptions',
+		type: 'collection',
+		displayOptions: {
+			show: {
+				operation: ['ttsStatus'],
+			},
+		},
+		default: {},
+		options: [
+			{
+				displayName: 'Cost',
+				name: 'cost',
+				type: 'number',
+				default: 0,
+				description: 'Echo the cost value from the initial 202 response to enable automatic refunds',
+			},
+			{
+				displayName: 'Payment Source',
+				name: 'paymentSource',
+				type: 'string',
+				default: '',
+				description: 'Echo the paymentSource from the initial 202 response to enable automatic refunds',
+			},
+			{
+				displayName: 'Is API Request',
+				name: 'isApiRequest',
+				type: 'boolean',
+				default: false,
+				description: 'Whether to echo isApiRequest from the initial 202 response',
+			},
+		],
+	},
 ];

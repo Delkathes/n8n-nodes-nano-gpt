@@ -39,6 +39,7 @@ export const sttNanoGPTParameterProperties: INodeProperties[] = [
 		displayName: 'Audio File',
 		name: 'audioFile',
 		type: 'string',
+		required: true,
 		displayOptions: {
 			show: {
 				operation: ['transcribe'],

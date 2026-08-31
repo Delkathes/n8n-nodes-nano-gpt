@@ -36,10 +36,38 @@ export const balanceNanoGPTParameterProperties: INodeProperties[] = [
 	},
 
 	{
-		displayName: 'Email',
-		name: 'email',
+		displayName: 'Amount',
+		name: 'invitationAmount',
+		type: 'number',
+		displayOptions: {
+			show: {
+				resource: ['balance'],
+				operation: ['createInvitation'],
+			},
+		},
+		default: 0,
+		typeOptions: {
+			minValue: 0,
+		},
+		description: 'Optional Nano amount attached to the invitation. Set to 0 to skip.',
+	},
+	{
+		displayName: 'Currency',
+		name: 'invitationCurrency',
 		type: 'string',
-		placeholder: 'name@email.com',
+		displayOptions: {
+			show: {
+				resource: ['balance'],
+				operation: ['createInvitation'],
+			},
+		},
+		default: 'NANO',
+		description: 'Currency for the invitation amount',
+	},
+	{
+		displayName: 'Recipient Name',
+		name: 'invitationRecipientName',
+		type: 'string',
 		displayOptions: {
 			show: {
 				resource: ['balance'],
@@ -47,7 +75,33 @@ export const balanceNanoGPTParameterProperties: INodeProperties[] = [
 			},
 		},
 		default: '',
-		description: 'Email address for invitation',
+		description: 'Optional name of the invitation recipient',
+	},
+	{
+		displayName: 'Issuer Name',
+		name: 'invitationIssuerName',
+		type: 'string',
+		displayOptions: {
+			show: {
+				resource: ['balance'],
+				operation: ['createInvitation'],
+			},
+		},
+		default: '',
+		description: 'Optional name of the invitation issuer',
+	},
+	{
+		displayName: 'Issuer Note',
+		name: 'invitationIssuerNote',
+		type: 'string',
+		displayOptions: {
+			show: {
+				resource: ['balance'],
+				operation: ['createInvitation'],
+			},
+		},
+		default: '',
+		description: 'Optional note from the invitation issuer',
 	},
 ];
 
@@ -66,36 +120,10 @@ export const nanoCryptoNanoGPTParameterProperties: INodeProperties[] = [
 			{
 				name: 'Receive Nano Crypto',
 				value: 'receiveNano',
-				description: 'Receive Nano cryptocurrency deposit',
+				description: 'Process pending Nano deposits on your NanoGPT account',
 				action: 'Receive nano crypto',
 			},
 		],
 		default: 'receiveNano',
-	},
-
-	{
-		displayName: 'Address',
-		name: 'address',
-		type: 'string',
-		displayOptions: {
-			show: {
-				resource: ['nanoCrypto'],
-			},
-		},
-		default: '',
-		description: 'Nano cryptocurrency address',
-	},
-
-	{
-		displayName: 'Amount',
-		name: 'amount',
-		type: 'number',
-		displayOptions: {
-			show: {
-				resource: ['nanoCrypto'],
-			},
-		},
-		default: 0,
-		description: 'Amount of Nano to receive',
 	},
 ];

@@ -92,6 +92,35 @@ export const teeNanoGPTParameterProperties: INodeProperties[] = [
 		],
 		default: 'teeAttestation',
 	},
+	{
+		displayName: 'Model',
+		name: 'model',
+		type: 'string',
+		required: true,
+		displayOptions: {
+			show: {
+				resource: ['tee'],
+			},
+		},
+		default: 'DeepSeek-R1-Distill-Llama-70B-TEE',
+		placeholder: 'DeepSeek-R1-Distill-Llama-70B-TEE',
+		description: 'TEE-capable model to use',
+	},
+	{
+		displayName: 'Request ID',
+		name: 'jobId',
+		type: 'string',
+		required: true,
+		displayOptions: {
+			show: {
+				resource: ['tee'],
+				operation: ['teeSignature'],
+			},
+		},
+		default: '',
+		placeholder: 'Request ID from a previous chat completion',
+		description: 'Request ID of the chat completion to get a TEE signature for',
+	},
 ];
 
 export const midjourneyNanoGPTParameterProperties: INodeProperties[] = [

@@ -33,6 +33,7 @@ export const embeddingsNanoGPTParameterProperties: INodeProperties[] = [
 		displayName: 'Input',
 		name: 'input',
 		type: 'string',
+		required: true,
 		displayOptions: {
 			show: {
 				operation: ['createEmbedding'],

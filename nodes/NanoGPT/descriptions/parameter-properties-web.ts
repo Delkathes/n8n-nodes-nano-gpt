@@ -27,6 +27,7 @@ export const webNanoGPTParameterProperties: INodeProperties[] = [
 		displayName: 'URLs',
 		name: 'urls',
 		type: 'string',
+		required: true,
 		displayOptions: {
 			show: {
 				operation: ['scrapeUrls'],
@@ -84,6 +85,7 @@ export const webNanoGPTParameterProperties: INodeProperties[] = [
 		displayName: 'Query',
 		name: 'query',
 		type: 'string',
+		required: true,
 		displayOptions: {
 			show: {
 				operation: ['webSearch'],

@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import type { IExecuteFunctions, IDataObject } from 'n8n-workflow';
+import { NodeOperationError } from 'n8n-workflow';
 import { NanoGPTClient } from '../../../utils/NanoGPTClient';
 import type { NanoGptMessage } from '../NanoGpt.node';
 
@@ -222,6 +223,50 @@ async function handleCreateResponse(
 		throw new Error('Input cannot be empty');
 	}
 
+	let tools: any[] | undefined;
+	const toolsRaw = advanced.tools as string;
+	if (toolsRaw && toolsRaw.trim().length > 0) {
+		try {
+			tools = JSON.parse(toolsRaw);
+		} catch {
+			throw new NodeOperationError(context.getNode(), 'Tools must be a valid JSON array');
+		}
+	}
+
+	let metadata: Record<string, string> | undefined;
+	const metadataRaw = advanced.metadata as string;
+	if (metadataRaw && metadataRaw.trim().length > 0) {
+		try {
+			metadata = JSON.parse(metadataRaw);
+		} catch {
+			throw new NodeOperationError(context.getNode(), 'Metadata must be a valid JSON object');
+		}
+	}
+
+	const reasoningEffort = advanced.reasoning_effort as string;
+	const reasoningSummary = advanced.reasoning_summary as string;
+	const textFormat = advanced.text_format as string;
+	const verbosity = advanced.verbosity as string;
+
+	let text: { format?: object; verbosity?: string } | undefined;
+	if (textFormat === 'json_object') {
+		text = { format: { type: 'json_object' } };
+	} else if (textFormat === 'json_schema') {
+		const schemaRaw = advanced.json_schema as string;
+		let jsonSchema: object | undefined;
+		if (schemaRaw && schemaRaw.trim().length > 0) {
+			try {
+				jsonSchema = JSON.parse(schemaRaw);
+			} catch {
+				throw new NodeOperationError(context.getNode(), 'JSON Schema must be a valid JSON object');
+			}
+		}
+		text = { format: { type: 'json_schema', ...(jsonSchema ? { json_schema: jsonSchema } : {}) } };
+	}
+	if (verbosity) {
+		text = { ...(text || {}), verbosity };
+	}
+
 	const response = await client.createResponse(model, input, {
 		instructions: instructions || undefined,
 		store: advanced.store !== undefined ? advanced.store as boolean : true,
@@ -233,13 +278,22 @@ async function handleCreateResponse(
 		topLogprobs: advanced.top_logprobs as number,
 		seed: advanced.seed as number,
 		previousResponseId: advanced.previous_response_id as string || undefined,
+		...(tools && { tools }),
+		...(advanced.tool_choice && { toolChoice: advanced.tool_choice as string }),
 		maxToolCalls: advanced.max_tool_calls as number,
 		parallelToolCalls: advanced.parallel_tool_calls !== undefined ? advanced.parallel_tool_calls as boolean : undefined,
-		toolChoice: advanced.tool_choice as string || undefined,
 		background: advanced.background !== undefined ? advanced.background as boolean : undefined,
 		truncation: advanced.truncation as string || undefined,
 		serviceTier: advanced.service_tier as string || undefined,
 		user: advanced.user as string || undefined,
+		...(metadata && { metadata }),
+		...((reasoningEffort || reasoningSummary) && {
+			reasoning: {
+				...(reasoningEffort ? { effort: reasoningEffort } : {}),
+				...(reasoningSummary ? { summary: reasoningSummary } : {}),
+			},
+		}),
+		...(text && { text }),
 	});
 
 	return response as unknown as IDataObject;
@@ -284,6 +338,7 @@ async function handleCreateMessage(
 	const messagesRaw = context.getNodeParameter('messages', i) as string | any[];
 	const maxTokens = context.getNodeParameter('maxTokens', i, 4096) as number;
 	const systemPrompt = context.getNodeParameter('systemPrompt', i, '') as string;
+	const advancedOptions = context.getNodeParameter('messagesAdvancedOptions', i, {}) as IDataObject;
 
 	const messages = typeof messagesRaw === 'string' ? JSON.parse(messagesRaw) : messagesRaw;
 
@@ -291,8 +346,47 @@ async function handleCreateMessage(
 		throw new Error('Messages must be a non-empty array');
 	}
 
+	const stopSequencesRaw = advancedOptions.stop_sequences as string;
+	let stopSequences: string[] | undefined;
+	if (stopSequencesRaw && stopSequencesRaw.trim().length > 0) {
+		stopSequences = stopSequencesRaw
+			.split(',')
+			.map((s) => s.trim())
+			.filter((s) => s.length > 0);
+	}
+
+	let tools: any[] | undefined;
+	const toolsRaw = advancedOptions.tools as string;
+	if (toolsRaw && toolsRaw.trim().length > 0) {
+		try {
+			tools = JSON.parse(toolsRaw);
+		} catch {
+			throw new NodeOperationError(context.getNode(), 'Tools must be a valid JSON array');
+		}
+	}
+
 	const response = await client.createMessage(model, maxTokens, messages, {
 		system: systemPrompt || undefined,
+		...(advancedOptions.temperature !== undefined && { temperature: advancedOptions.temperature as number }),
+		...(advancedOptions.top_p !== undefined && { topP: advancedOptions.top_p as number }),
+		...(advancedOptions.top_k !== undefined && { topK: advancedOptions.top_k as number }),
+		...(stopSequences && stopSequences.length > 0 && { stopSequences }),
+		...(tools && { tools }),
+		...(advancedOptions.tool_choice && { toolChoice: advancedOptions.tool_choice as string }),
+		...(advancedOptions.disable_parallel_tool_use !== undefined && {
+			disableParallelToolUse: advancedOptions.disable_parallel_tool_use as boolean,
+		}),
+		...(advancedOptions.thinking_enabled && {
+			thinking: {
+				type: 'enabled',
+				...(advancedOptions.thinking_budget_tokens
+					? { budgetTokens: advancedOptions.thinking_budget_tokens as number }
+					: {}),
+			},
+		}),
+		...(advancedOptions.prompt_caching !== undefined && {
+			promptCaching: advancedOptions.prompt_caching as boolean,
+		}),
 	});
 
 	return response as unknown as IDataObject;
@@ -311,11 +405,19 @@ async function handleTextCompletion(
 		throw new Error('Prompt cannot be empty');
 	}
 
+	const stopRaw = advancedOptions.stop as string;
+	const stop = stopRaw
+		? stopRaw
+				.split(',')
+				.map((s) => s.trim())
+				.filter((s) => s.length > 0)
+		: undefined;
+
 	const response = await client.completion(prompt, model, {
 		maxTokens: (advancedOptions.max_tokens as number) || 1000,
 		temperature: (advancedOptions.temperature as number) || 0.7,
 		topP: advancedOptions.top_p as number,
-		stop: advancedOptions.stop as string[],
+		...(stop && stop.length > 0 && { stop }),
 	});
 
 	return response as unknown as IDataObject;
@@ -400,6 +502,11 @@ async function handleGenerateVideo(
 		proMode: advancedOptions.pro_mode as boolean,
 		generateAudio: advancedOptions.generateAudio as boolean,
 		seed: advancedOptions.seed as number,
+		...(advancedOptions.cfg_scale !== undefined && { cfg_scale: advancedOptions.cfg_scale as number }),
+		...(advancedOptions.num_frames !== undefined && { num_frames: advancedOptions.num_frames as number }),
+		...(advancedOptions.frames_per_second !== undefined && { frames_per_second: advancedOptions.frames_per_second as number }),
+		...(advancedOptions.num_inference_steps !== undefined && { num_inference_steps: advancedOptions.num_inference_steps as number }),
+		...(advancedOptions.camera_fixed !== undefined && { camera_fixed: advancedOptions.camera_fixed as boolean }),
 	});
 
 	return response as unknown as IDataObject;
@@ -560,12 +667,19 @@ async function handleTTSStatus(
 ): Promise<IDataObject> {
 	const runId = context.getNodeParameter('ttsTaskId', i) as string;
 	const model = context.getNodeParameter('ttsModel', i, 'Kokoro-82m') as string;
+	const advancedOptions = context.getNodeParameter('ttsStatusAdvancedOptions', i, {}) as IDataObject;
 
 	if (!runId || runId.trim() === '') {
 		throw new Error('TTS Run ID cannot be empty');
 	}
 
-	const response = await client.getTTSStatus(runId, model);
+	const response = await client.getTTSStatus(runId, model, {
+		...(advancedOptions.cost ? { cost: advancedOptions.cost as number } : {}),
+		...(advancedOptions.paymentSource
+			? { paymentSource: advancedOptions.paymentSource as string }
+			: {}),
+		...(advancedOptions.isApiRequest ? { isApiRequest: true } : {}),
+	});
 	return response as unknown as IDataObject;
 }
 
@@ -762,9 +876,23 @@ async function handleBalanceOperation(
 		case 'checkBalance':
 			response = await client.checkBalance();
 			break;
-		case 'createInvitation':
-			response = await client.createInvitation({ type: 'invitation' });
+		case 'createInvitation': {
+			const amount = context.getNodeParameter('invitationAmount', i, 0) as number;
+			const currency = context.getNodeParameter('invitationCurrency', i, 'NANO') as string;
+			const recipientName = context.getNodeParameter('invitationRecipientName', i, '') as string;
+			const issuerName = context.getNodeParameter('invitationIssuerName', i, '') as string;
+			const issuerNote = context.getNodeParameter('invitationIssuerNote', i, '') as string;
+
+			response = await client.createInvitation({
+				type: 'invitation',
+				...(amount > 0 && { amount }),
+				...(currency ? { currency } : {}),
+				...(recipientName ? { recipientName } : {}),
+				...(issuerName ? { issuerName } : {}),
+				...(issuerNote ? { issuerNote } : {}),
+			});
 			break;
+		}
 		case 'subscriptionUsage':
 			response = await client.getSubscriptionUsage();
 			break;

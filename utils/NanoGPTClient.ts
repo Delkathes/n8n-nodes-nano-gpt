@@ -642,9 +642,34 @@ export class NanoGPTClient {
 			return this.makeRequest('POST', '/transcribe', requestBody);
 		}
 
-		const ext = (contentType || 'audio/mpeg').split('/')[1] || 'mp3';
+		// Support both raw base64 and data URLs (data:<mime>;base64,...)
+		let base64Data = audioUrl || '';
+		let detectedContentType = contentType;
+		const dataUrlMatch = base64Data.match(/^data:([^;,]+);base64,(.*)$/s);
+		if (dataUrlMatch) {
+			detectedContentType = dataUrlMatch[1] || detectedContentType;
+			base64Data = dataUrlMatch[2];
+		}
+		if (!/^[A-Za-z0-9+/=\r\n\s]*$/.test(base64Data)) {
+			throw new NodeOperationError(
+				this.context.getNode(),
+				'Audio data must be valid base64 or a data URL',
+			);
+		}
+
+		const audioBuffer = Buffer.from(base64Data, 'base64');
+		if (audioBuffer.length === 0) {
+			throw new NodeOperationError(this.context.getNode(), 'Audio data cannot be empty');
+		}
+		if (audioBuffer.length > 3 * 1024 * 1024) {
+			throw new NodeOperationError(
+				this.context.getNode(),
+				`Audio file is ${(audioBuffer.length / 1024 / 1024).toFixed(2)} MB, which exceeds the 3 MB upload limit`,
+			);
+		}
+
+		const ext = (detectedContentType || 'audio/mpeg').split('/')[1] || 'mp3';
 		const fileName = `audio-${Date.now()}.${ext}`;
-		const audioBuffer = Buffer.from(audioUrl || '', 'base64');
 
 		const boundary = `----NanoGPTPart${Math.random().toString(36).slice(2)}`;
 		const parts: Buffer[] = [];
@@ -782,14 +807,35 @@ export class NanoGPTClient {
 
 		const contentType = (response.headers['content-type'] as string) || '';
 
-		if (contentType.includes('application/json') || response.headers['content-length'] < 500) {
-			const json = Buffer.isBuffer(response.body)
-				? JSON.parse(response.body.toString('utf-8'))
-				: typeof response.body === 'string'
-					? JSON.parse(response.body)
-					: response.body;
-			if (json.status === 'pending' || json.runId) return json;
-			return json;
+		const bodyText = Buffer.isBuffer(response.body)
+			? response.body.toString('utf-8')
+			: typeof response.body === 'string'
+				? response.body
+				: JSON.stringify(response.body);
+
+		if ((response.statusCode as number) >= 400) {
+			let message = bodyText;
+			try {
+				const parsed = JSON.parse(bodyText);
+				message = parsed.error?.message || parsed.error || bodyText;
+			} catch {
+				// Keep the raw body as the error message
+			}
+			throw new NodeOperationError(
+				this.context.getNode(),
+				`NanoGPT TTS failed (${response.statusCode}): ${message}`,
+			);
+		}
+
+		if (contentType.includes('application/json')) {
+			const json = JSON.parse(bodyText);
+			if (json.status === 'pending' || json.runId || json.error) {
+				return json;
+			}
+			throw new NodeOperationError(
+				this.context.getNode(),
+				`NanoGPT TTS returned an unexpected JSON response: ${bodyText.slice(0, 300)}`,
+			);
 		}
 
 		return {
@@ -803,7 +849,7 @@ export class NanoGPTClient {
 	}
 
 	/**
-	 * Synchronous TTS (returns audio directly)
+	 * Synchronous TTS (returns audio bytes directly)
 	 * POST /v1/audio/speech
 	 */
 	async synchronousTTS(
@@ -824,7 +870,53 @@ export class NanoGPTClient {
 		if (options.instructions) requestBody.instructions = options.instructions;
 		if (options.stream !== undefined) requestBody.stream = options.stream;
 
-		return this.makeRequest('POST', '/v1/audio/speech', requestBody);
+		const url = `${this.getBaseUrl()}/api/v1/audio/speech`;
+
+		const response = await this.context.helpers.httpRequest({
+			method: 'POST',
+			url,
+			headers: {
+				...this.getAuthHeaders('/v1/audio/speech'),
+				'Content-Type': 'application/json',
+			},
+			body: requestBody,
+			returnFullResponse: true,
+			encoding: 'arraybuffer',
+		});
+
+		const bodyText = Buffer.isBuffer(response.body)
+			? response.body.toString('utf-8')
+			: typeof response.body === 'string'
+				? response.body
+				: JSON.stringify(response.body);
+
+		if ((response.statusCode as number) >= 400) {
+			let message = bodyText;
+			try {
+				const parsed = JSON.parse(bodyText);
+				message = parsed.error?.message || parsed.error || bodyText;
+			} catch {
+				// Keep the raw body as the error message
+			}
+			throw new NodeOperationError(
+				this.context.getNode(),
+				`NanoGPT synchronous TTS failed (${response.statusCode}): ${message}`,
+			);
+		}
+
+		// The endpoint returns raw audio bytes; a JSON response indicates an
+		// async-style or unexpected payload.
+		const contentType = (response.headers['content-type'] as string) || '';
+		if (contentType.includes('application/json')) {
+			return JSON.parse(bodyText) as SynchronousTTSResponse;
+		}
+
+		return {
+			audio: Buffer.isBuffer(response.body)
+				? response.body.toString('base64')
+				: Buffer.from(response.body as string).toString('base64'),
+			format: contentType || 'audio/mpeg',
+		} as SynchronousTTSResponse;
 	}
 
 	/**
