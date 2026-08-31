@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.1.27](https://github.com/Delkathes/n8n-nodes-nano-gpt/compare/0.1.26...0.1.27) (2026-08-31)
+
+### Bug Fixes
+
+* update TypeScript configuration for improved module resolution and type definitions ([3063a81](https://github.com/Delkathes/n8n-nodes-nano-gpt/commit/3063a814b5aa4bee269fe6adf903386d8b7586a5))
+
 All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
