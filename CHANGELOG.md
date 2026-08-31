@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.1.28](https://github.com/Delkathes/n8n-nodes-nano-gpt/compare/0.1.27...0.1.28) (2026-08-31)
+
+### Bug Fixes
+
+* wire up dropped options, fix synchronousTTS/TEE/model lists, clean auth ([421b7fd](https://github.com/Delkathes/n8n-nodes-nano-gpt/commit/421b7fdaea08f8f15c47df4a4710260e1b2601cc))
+
 ## [0.1.27](https://github.com/Delkathes/n8n-nodes-nano-gpt/compare/0.1.26...0.1.27) (2026-08-31)
 
 ### Bug Fixes
